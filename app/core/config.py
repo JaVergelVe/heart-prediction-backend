@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     debug: bool = False
     api_version: str = "1.0.0"
     database_url: str | None = None
+    jwt_secret_key: str = "dev-only-change-with-JWT_SECRET_KEY"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_seconds: int = 86400
 
 
 @lru_cache

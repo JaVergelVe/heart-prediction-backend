@@ -27,10 +27,8 @@ class UserProfile(Base, TimestampMixin):
         unique=True,
         nullable=False,
     )
-    state: Mapped[str | None] = mapped_column(String(100))
     sex: Mapped[str | None] = mapped_column(String(10))
     birth_date: Mapped[date | None] = mapped_column(Date)
     age_category: Mapped[str | None] = mapped_column(String(64))
     height_meters: Mapped[float | None] = mapped_column(Numeric(4, 2))
-    race_ethnicity_category: Mapped[str | None] = mapped_column(String(128))
     removed_teeth: Mapped[str | None] = mapped_column(String(64))
