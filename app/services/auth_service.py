@@ -8,17 +8,11 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.constants import auth as auth_c
+from app.constants import http as http_c
+from app.constants import messages as msg_c
+from app.constants import validation as val_c
 from app.core.config import get_settings
-from app.core.constants import (
-    ERROR_CODE_INVALID_CREDENTIALS,
-    ERROR_CODE_UNAUTHORIZED,
-    ERROR_CODE_VALIDATION,
-    FIELD_EMAIL,
-    MSG_INVALID_CREDENTIALS,
-    MSG_TOKEN_INVALID_OR_EXPIRED,
-    MSG_VALIDATION_FAILED,
-    REASON_EMAIL_REGISTERED,
-)
 from app.core.exceptions import APIError
 from app.models import MedicalConditions, User, UserProfile
 from app.schemas.auth import RegisterRequest
@@ -44,9 +38,9 @@ def create_access_token(user_id: str) -> str:
     now = datetime.now(timezone.utc)
     expire = now + timedelta(seconds=settings.access_token_expire_seconds)
     payload = {
-        "sub": user_id,
-        "exp": expire,
-        "iat": now,
+        auth_c.JWT_CLAIM_SUB: user_id,
+        auth_c.JWT_CLAIM_EXP: expire,
+        auth_c.JWT_CLAIM_IAT: now,
     }
     return jwt.encode(
         payload,
@@ -65,16 +59,16 @@ def decode_access_token(token: str) -> str:
         )
     except jwt.PyJWTError:
         raise APIError(
-            401,
-            code=ERROR_CODE_UNAUTHORIZED,
-            message=MSG_TOKEN_INVALID_OR_EXPIRED,
+            http_c.HTTP_401_UNAUTHORIZED,
+            code=msg_c.ERROR_CODE_UNAUTHORIZED,
+            message=msg_c.MSG_TOKEN_INVALID_OR_EXPIRED,
         ) from None
-    sub = payload.get("sub")
+    sub = payload.get(auth_c.JWT_CLAIM_SUB)
     if not isinstance(sub, str) or not sub.strip():
         raise APIError(
-            401,
-            code=ERROR_CODE_UNAUTHORIZED,
-            message=MSG_TOKEN_INVALID_OR_EXPIRED,
+            http_c.HTTP_401_UNAUTHORIZED,
+            code=msg_c.ERROR_CODE_UNAUTHORIZED,
+            message=msg_c.MSG_TOKEN_INVALID_OR_EXPIRED,
         )
     return sub
 
@@ -87,16 +81,19 @@ def get_user_by_email(db: Session, email: str) -> User | None:
 def register_user(db: Session, body: RegisterRequest) -> User:
     if get_user_by_email(db, str(body.email)) is not None:
         raise APIError(
-            400,
-            code=ERROR_CODE_VALIDATION,
-            message=MSG_VALIDATION_FAILED,
-            details={"field": FIELD_EMAIL, "reason": REASON_EMAIL_REGISTERED},
+            http_c.HTTP_400_BAD_REQUEST,
+            code=msg_c.ERROR_CODE_VALIDATION,
+            message=msg_c.MSG_VALIDATION_FAILED,
+            details={
+                msg_c.KEY_FIELD: msg_c.FIELD_EMAIL,
+                msg_c.KEY_REASON: msg_c.REASON_EMAIL_REGISTERED,
+            },
         )
 
     user = User(
         email=str(body.email).lower(),
         password_hash=hash_password(body.password),
-        is_active=True,
+        is_active=val_c.DEFAULT_USER_IS_ACTIVE,
     )
     db.add(user)
 
@@ -137,10 +134,13 @@ def register_user(db: Session, body: RegisterRequest) -> User:
     except IntegrityError:
         db.rollback()
         raise APIError(
-            400,
-            code=ERROR_CODE_VALIDATION,
-            message=MSG_VALIDATION_FAILED,
-            details={"field": FIELD_EMAIL, "reason": REASON_EMAIL_REGISTERED},
+            http_c.HTTP_400_BAD_REQUEST,
+            code=msg_c.ERROR_CODE_VALIDATION,
+            message=msg_c.MSG_VALIDATION_FAILED,
+            details={
+                msg_c.KEY_FIELD: msg_c.FIELD_EMAIL,
+                msg_c.KEY_REASON: msg_c.REASON_EMAIL_REGISTERED,
+            },
         ) from None
 
     db.refresh(user)
@@ -151,15 +151,15 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
     user = get_user_by_email(db, email.lower())
     if user is None or not verify_password(password, user.password_hash):
         raise APIError(
-            401,
-            code=ERROR_CODE_INVALID_CREDENTIALS,
-            message=MSG_INVALID_CREDENTIALS,
+            http_c.HTTP_401_UNAUTHORIZED,
+            code=msg_c.ERROR_CODE_INVALID_CREDENTIALS,
+            message=msg_c.MSG_INVALID_CREDENTIALS,
         )
     if not user.is_active:
         raise APIError(
-            401,
-            code=ERROR_CODE_INVALID_CREDENTIALS,
-            message=MSG_INVALID_CREDENTIALS,
+            http_c.HTTP_401_UNAUTHORIZED,
+            code=msg_c.ERROR_CODE_INVALID_CREDENTIALS,
+            message=msg_c.MSG_INVALID_CREDENTIALS,
         )
     user.last_login = datetime.now(timezone.utc)
     db.commit()

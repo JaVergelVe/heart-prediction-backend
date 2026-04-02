@@ -3,7 +3,8 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.core.constants import DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS
+from app.constants import auth as auth_c
+from app.constants import validation as val_c
 
 # Resolve .env from the backend project root (directory that contains `app/`), not from CWD.
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
@@ -17,13 +18,13 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    app_name: str = "Heart Attack Prediction API"
-    debug: bool = False
-    api_version: str = "1.0.0"
+    app_name: str = val_c.APP_NAME_DEFAULT
+    debug: bool = val_c.DEBUG_DEFAULT
+    api_version: str = val_c.API_VERSION_DEFAULT
     database_url: str | None = None
-    jwt_secret_key: str = "dev-only-change-with-JWT_SECRET_KEY"
-    jwt_algorithm: str = "HS256"
-    access_token_expire_seconds: int = DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS
+    jwt_secret_key: str = auth_c.JWT_SECRET_KEY_DEV_PLACEHOLDER
+    jwt_algorithm: str = auth_c.JWT_ALGORITHM_DEFAULT
+    access_token_expire_seconds: int = auth_c.ACCESS_TOKEN_EXPIRE_SECONDS_DEFAULT
 
 
 @lru_cache

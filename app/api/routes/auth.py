@@ -1,19 +1,21 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.constants import auth as auth_c
+from app.constants import http as http_c
+from app.constants import messages as msg_c
 from app.core.config import get_settings
-from app.core.constants import TOKEN_TYPE_BEARER
 from app.core.database import get_db
 from app.core.timefmt import to_iso_z
 from app.schemas.auth import LoginRequest, RegisterRequest
 from app.services import auth_service
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix=auth_c.ROUTER_PREFIX_AUTH, tags=[auth_c.ROUTER_TAG_AUTH])
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post(auth_c.ROUTE_REGISTER, status_code=http_c.HTTP_201_CREATED)
 def register(
     body: RegisterRequest,
     db: Session = Depends(get_db),
@@ -22,18 +24,18 @@ def register(
     settings = get_settings()
     token = auth_service.create_access_token(user.id)
     return {
-        "data": {
-            "user_id": user.id,
-            "email": user.email,
-            "access_token": token,
-            "token_type": TOKEN_TYPE_BEARER,
-            "expires_in": settings.access_token_expire_seconds,
-            "created_at": to_iso_z(user.created_at),
+        msg_c.KEY_DATA: {
+            msg_c.KEY_USER_ID: user.id,
+            msg_c.KEY_EMAIL: user.email,
+            msg_c.KEY_ACCESS_TOKEN: token,
+            msg_c.KEY_TOKEN_TYPE: auth_c.TOKEN_TYPE_BEARER,
+            msg_c.KEY_EXPIRES_IN: settings.access_token_expire_seconds,
+            msg_c.KEY_CREATED_AT: to_iso_z(user.created_at),
         },
     }
 
 
-@router.post("/login")
+@router.post(auth_c.ROUTE_LOGIN)
 def login(
     body: LoginRequest,
     db: Session = Depends(get_db),
@@ -43,12 +45,12 @@ def login(
     token = auth_service.create_access_token(user.id)
     last = user.last_login or datetime.now(timezone.utc)
     return {
-        "data": {
-            "user_id": user.id,
-            "email": user.email,
-            "access_token": token,
-            "token_type": TOKEN_TYPE_BEARER,
-            "expires_in": settings.access_token_expire_seconds,
-            "last_login": to_iso_z(last),
+        msg_c.KEY_DATA: {
+            msg_c.KEY_USER_ID: user.id,
+            msg_c.KEY_EMAIL: user.email,
+            msg_c.KEY_ACCESS_TOKEN: token,
+            msg_c.KEY_TOKEN_TYPE: auth_c.TOKEN_TYPE_BEARER,
+            msg_c.KEY_EXPIRES_IN: settings.access_token_expire_seconds,
+            msg_c.KEY_LAST_LOGIN: to_iso_z(last),
         },
     }

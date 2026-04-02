@@ -3,11 +3,8 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.constants import (
-    DEFAULT_HAD_DIABETES_DISPLAY,
-    ERROR_CODE_INTERNAL,
-    MSG_PROFILE_INCOMPLETE,
-)
+from app.constants import http as http_c
+from app.constants import messages as msg_c
 from app.core.exceptions import APIError
 from app.core.timefmt import to_iso_z
 from app.models import MedicalConditions, User, UserProfile
@@ -20,42 +17,47 @@ def build_me_data(db: Session, user: User) -> dict:
     ).first()
     if profile is None or medical is None:
         raise APIError(
-            500,
-            code=ERROR_CODE_INTERNAL,
-            message=MSG_PROFILE_INCOMPLETE,
+            http_c.HTTP_500_INTERNAL_SERVER_ERROR,
+            code=msg_c.ERROR_CODE_INTERNAL,
+            message=msg_c.MSG_PROFILE_INCOMPLETE,
         )
 
     height = profile.height_meters
     height_out = float(height) if height is not None else None
 
     return {
-        "user_id": user.id,
-        "email": user.email,
-        "profile": {
-            "sex": profile.sex,
-            "birth_date": profile.birth_date.isoformat() if profile.birth_date else None,
-            "age_category": profile.age_category,
-            "height_meters": height_out,
-            "removed_teeth": profile.removed_teeth,
-            "created_at": to_iso_z(profile.created_at),
-            "updated_at": to_iso_z(profile.updated_at),
+        msg_c.KEY_USER_ID: user.id,
+        msg_c.KEY_EMAIL: user.email,
+        msg_c.KEY_PROFILE: {
+            msg_c.KEY_SEX: profile.sex,
+            msg_c.KEY_BIRTH_DATE: profile.birth_date.isoformat()
+            if profile.birth_date
+            else None,
+            msg_c.KEY_AGE_CATEGORY: profile.age_category,
+            msg_c.KEY_HEIGHT_METERS: height_out,
+            msg_c.KEY_REMOVED_TEETH: profile.removed_teeth,
+            msg_c.KEY_CREATED_AT: to_iso_z(profile.created_at),
+            msg_c.KEY_UPDATED_AT: to_iso_z(profile.updated_at),
         },
-        "medical_conditions": {
-            "had_angina": bool(medical.had_angina),
-            "had_stroke": bool(medical.had_stroke),
-            "had_asthma": bool(medical.had_asthma),
-            "had_copd": bool(medical.had_copd),
-            "had_skin_cancer": bool(medical.had_skin_cancer),
-            "had_depressive_disorder": bool(medical.had_depressive_disorder),
-            "had_kidney_disease": bool(medical.had_kidney_disease),
-            "had_arthritis": bool(medical.had_arthritis),
-            "had_diabetes": medical.had_diabetes or DEFAULT_HAD_DIABETES_DISPLAY,
-            "deaf_or_hard_of_hearing": bool(medical.deaf_or_hard_of_hearing),
-            "blind_or_vision_difficulty": bool(medical.blind_or_vision_difficulty),
-            "difficulty_concentrating": bool(medical.difficulty_concentrating),
-            "difficulty_walking": bool(medical.difficulty_walking),
-            "difficulty_dressing_bathing": bool(medical.difficulty_dressing_bathing),
-            "difficulty_errands": bool(medical.difficulty_errands),
-            "updated_at": to_iso_z(medical.updated_at),
+        msg_c.KEY_MEDICAL_CONDITIONS: {
+            msg_c.KEY_HAD_ANGINA: bool(medical.had_angina),
+            msg_c.KEY_HAD_STROKE: bool(medical.had_stroke),
+            msg_c.KEY_HAD_ASTHMA: bool(medical.had_asthma),
+            msg_c.KEY_HAD_COPD: bool(medical.had_copd),
+            msg_c.KEY_HAD_SKIN_CANCER: bool(medical.had_skin_cancer),
+            msg_c.KEY_HAD_DEPRESSIVE_DISORDER: bool(medical.had_depressive_disorder),
+            msg_c.KEY_HAD_KIDNEY_DISEASE: bool(medical.had_kidney_disease),
+            msg_c.KEY_HAD_ARTHRITIS: bool(medical.had_arthritis),
+            msg_c.KEY_HAD_DIABETES: medical.had_diabetes
+            or msg_c.DEFAULT_HAD_DIABETES_DISPLAY,
+            msg_c.KEY_DEAF_OR_HARD_OF_HEARING: bool(medical.deaf_or_hard_of_hearing),
+            msg_c.KEY_BLIND_OR_VISION_DIFFICULTY: bool(medical.blind_or_vision_difficulty),
+            msg_c.KEY_DIFFICULTY_CONCENTRATING: bool(medical.difficulty_concentrating),
+            msg_c.KEY_DIFFICULTY_WALKING: bool(medical.difficulty_walking),
+            msg_c.KEY_DIFFICULTY_DRESSING_BATHING: bool(
+                medical.difficulty_dressing_bathing
+            ),
+            msg_c.KEY_DIFFICULTY_ERRANDS: bool(medical.difficulty_errands),
+            msg_c.KEY_UPDATED_AT: to_iso_z(medical.updated_at),
         },
     }

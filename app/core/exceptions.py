@@ -4,11 +4,8 @@ from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.core.constants import (
-    ERROR_CODE_VALIDATION,
-    MSG_VALIDATION_FAILED,
-    MSG_VALIDATION_INVALID_INPUT,
-)
+from app.constants import http as http_c
+from app.constants import messages as msg_c
 
 
 class APIError(Exception):
@@ -27,9 +24,14 @@ class APIError(Exception):
 
 
 async def api_error_handler(_request: Request, exc: APIError) -> JSONResponse:
-    body: dict = {"error": {"code": exc.code, "message": exc.message}}
+    body: dict = {
+        msg_c.KEY_ERROR: {
+            msg_c.KEY_CODE: exc.code,
+            msg_c.KEY_MESSAGE: exc.message,
+        }
+    }
     if exc.details is not None:
-        body["error"]["details"] = exc.details
+        body[msg_c.KEY_ERROR][msg_c.KEY_DETAILS] = exc.details
     return JSONResponse(status_code=exc.status_code, content=body)
 
 
@@ -39,16 +41,16 @@ async def validation_error_handler(
     errs = exc.errors()
     first = errs[0] if errs else {}
     loc = first.get("loc", ())
-    field = str(loc[-1]) if loc else "body"
+    field = str(loc[-1]) if loc else msg_c.FIELD_BODY
     return JSONResponse(
-        status_code=400,
+        status_code=http_c.HTTP_400_BAD_REQUEST,
         content={
-            "error": {
-                "code": ERROR_CODE_VALIDATION,
-                "message": MSG_VALIDATION_FAILED,
-                "details": {
-                    "field": field,
-                    "reason": first.get("msg", MSG_VALIDATION_INVALID_INPUT),
+            msg_c.KEY_ERROR: {
+                msg_c.KEY_CODE: msg_c.ERROR_CODE_VALIDATION,
+                msg_c.KEY_MESSAGE: msg_c.MSG_VALIDATION_FAILED,
+                msg_c.KEY_DETAILS: {
+                    msg_c.KEY_FIELD: field,
+                    msg_c.KEY_REASON: first.get("msg", msg_c.MSG_VALIDATION_INVALID_INPUT),
                 },
             }
         },
