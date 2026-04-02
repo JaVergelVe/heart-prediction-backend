@@ -5,6 +5,12 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.constants import (
+    AUTH_SCHEME_BEARER_LOWER,
+    ERROR_CODE_UNAUTHORIZED,
+    MSG_TOKEN_INVALID_OR_EXPIRED,
+    MSG_TOKEN_REQUIRED,
+)
 from app.core.database import get_db
 from app.core.exceptions import APIError
 from app.models import User
@@ -20,18 +26,18 @@ def get_current_user(
     ],
     db: Annotated[Session, Depends(get_db)],
 ) -> User:
-    if credentials is None or credentials.scheme.lower() != "bearer":
+    if credentials is None or credentials.scheme.lower() != AUTH_SCHEME_BEARER_LOWER:
         raise APIError(
             401,
-            code="UNAUTHORIZED",
-            message="Token de acceso requerido",
+            code=ERROR_CODE_UNAUTHORIZED,
+            message=MSG_TOKEN_REQUIRED,
         )
     user_id = decode_access_token(credentials.credentials)
     user = db.scalars(select(User).where(User.id == user_id)).first()
     if user is None or not user.is_active:
         raise APIError(
             401,
-            code="UNAUTHORIZED",
-            message="Token inválido o expirado",
+            code=ERROR_CODE_UNAUTHORIZED,
+            message=MSG_TOKEN_INVALID_OR_EXPIRED,
         )
     return user

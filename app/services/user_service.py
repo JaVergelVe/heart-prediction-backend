@@ -3,6 +3,11 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.constants import (
+    DEFAULT_HAD_DIABETES_DISPLAY,
+    ERROR_CODE_INTERNAL,
+    MSG_PROFILE_INCOMPLETE,
+)
 from app.core.exceptions import APIError
 from app.core.timefmt import to_iso_z
 from app.models import MedicalConditions, User, UserProfile
@@ -16,8 +21,8 @@ def build_me_data(db: Session, user: User) -> dict:
     if profile is None or medical is None:
         raise APIError(
             500,
-            code="INTERNAL_ERROR",
-            message="Perfil de usuario incompleto",
+            code=ERROR_CODE_INTERNAL,
+            message=MSG_PROFILE_INCOMPLETE,
         )
 
     height = profile.height_meters
@@ -44,7 +49,7 @@ def build_me_data(db: Session, user: User) -> dict:
             "had_depressive_disorder": bool(medical.had_depressive_disorder),
             "had_kidney_disease": bool(medical.had_kidney_disease),
             "had_arthritis": bool(medical.had_arthritis),
-            "had_diabetes": medical.had_diabetes or "No",
+            "had_diabetes": medical.had_diabetes or DEFAULT_HAD_DIABETES_DISPLAY,
             "deaf_or_hard_of_hearing": bool(medical.deaf_or_hard_of_hearing),
             "blind_or_vision_difficulty": bool(medical.blind_or_vision_difficulty),
             "difficulty_concentrating": bool(medical.difficulty_concentrating),

@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.core import constants as const
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -16,9 +17,9 @@ logger = logging.getLogger(__name__)
 class DatabaseHealthStatus(str, Enum):
     """Reportable database states (safe for clients; no credentials or exception text)."""
 
-    NOT_CONFIGURED = "not_configured"
-    CONNECTION_FAILED = "connection_failed"
-    HEALTHY = "healthy"
+    NOT_CONFIGURED = const.STATUS_NOT_CONFIGURED
+    CONNECTION_FAILED = const.STATUS_CONNECTION_FAILED
+    HEALTHY = const.STATUS_HEALTHY
 
 
 _settings = get_settings()

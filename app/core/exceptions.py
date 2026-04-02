@@ -4,6 +4,12 @@ from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.core.constants import (
+    ERROR_CODE_VALIDATION,
+    MSG_VALIDATION_FAILED,
+    MSG_VALIDATION_INVALID_INPUT,
+)
+
 
 class APIError(Exception):
     def __init__(
@@ -38,9 +44,12 @@ async def validation_error_handler(
         status_code=400,
         content={
             "error": {
-                "code": "VALIDATION_ERROR",
-                "message": "Error en validación de datos",
-                "details": {"field": field, "reason": first.get("msg", "Invalid input")},
+                "code": ERROR_CODE_VALIDATION,
+                "message": MSG_VALIDATION_FAILED,
+                "details": {
+                    "field": field,
+                    "reason": first.get("msg", MSG_VALIDATION_INVALID_INPUT),
+                },
             }
         },
     )

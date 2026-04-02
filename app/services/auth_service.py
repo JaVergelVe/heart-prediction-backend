@@ -9,6 +9,16 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.constants import (
+    ERROR_CODE_INVALID_CREDENTIALS,
+    ERROR_CODE_UNAUTHORIZED,
+    ERROR_CODE_VALIDATION,
+    FIELD_EMAIL,
+    MSG_INVALID_CREDENTIALS,
+    MSG_TOKEN_INVALID_OR_EXPIRED,
+    MSG_VALIDATION_FAILED,
+    REASON_EMAIL_REGISTERED,
+)
 from app.core.exceptions import APIError
 from app.models import MedicalConditions, User, UserProfile
 from app.schemas.auth import RegisterRequest
@@ -56,12 +66,16 @@ def decode_access_token(token: str) -> str:
     except jwt.PyJWTError:
         raise APIError(
             401,
-            code="UNAUTHORIZED",
-            message="Token inválido o expirado",
+            code=ERROR_CODE_UNAUTHORIZED,
+            message=MSG_TOKEN_INVALID_OR_EXPIRED,
         ) from None
     sub = payload.get("sub")
-    if not isinstance(sub, str):
-        raise APIError(401, code="UNAUTHORIZED", message="Token inválido o expirado")
+    if not isinstance(sub, str) or not sub.strip():
+        raise APIError(
+            401,
+            code=ERROR_CODE_UNAUTHORIZED,
+            message=MSG_TOKEN_INVALID_OR_EXPIRED,
+        )
     return sub
 
 
@@ -74,9 +88,9 @@ def register_user(db: Session, body: RegisterRequest) -> User:
     if get_user_by_email(db, str(body.email)) is not None:
         raise APIError(
             400,
-            code="VALIDATION_ERROR",
-            message="Error en validación de datos",
-            details={"field": "email", "reason": "Email ya está registrado"},
+            code=ERROR_CODE_VALIDATION,
+            message=MSG_VALIDATION_FAILED,
+            details={"field": FIELD_EMAIL, "reason": REASON_EMAIL_REGISTERED},
         )
 
     user = User(
@@ -124,9 +138,9 @@ def register_user(db: Session, body: RegisterRequest) -> User:
         db.rollback()
         raise APIError(
             400,
-            code="VALIDATION_ERROR",
-            message="Error en validación de datos",
-            details={"field": "email", "reason": "Email ya está registrado"},
+            code=ERROR_CODE_VALIDATION,
+            message=MSG_VALIDATION_FAILED,
+            details={"field": FIELD_EMAIL, "reason": REASON_EMAIL_REGISTERED},
         ) from None
 
     db.refresh(user)
@@ -138,14 +152,14 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
     if user is None or not verify_password(password, user.password_hash):
         raise APIError(
             401,
-            code="INVALID_CREDENTIALS",
-            message="Email o contraseña incorrectos",
+            code=ERROR_CODE_INVALID_CREDENTIALS,
+            message=MSG_INVALID_CREDENTIALS,
         )
     if not user.is_active:
         raise APIError(
             401,
-            code="INVALID_CREDENTIALS",
-            message="Email o contraseña incorrectos",
+            code=ERROR_CODE_INVALID_CREDENTIALS,
+            message=MSG_INVALID_CREDENTIALS,
         )
     user.last_login = datetime.now(timezone.utc)
     db.commit()

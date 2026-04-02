@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.constants import TOKEN_TYPE_BEARER
 from app.core.database import get_db
 from app.core.timefmt import to_iso_z
 from app.schemas.auth import LoginRequest, RegisterRequest
@@ -25,7 +26,7 @@ def register(
             "user_id": user.id,
             "email": user.email,
             "access_token": token,
-            "token_type": "Bearer",
+            "token_type": TOKEN_TYPE_BEARER,
             "expires_in": settings.access_token_expire_seconds,
             "created_at": to_iso_z(user.created_at),
         },
@@ -46,7 +47,7 @@ def login(
             "user_id": user.id,
             "email": user.email,
             "access_token": token,
-            "token_type": "Bearer",
+            "token_type": TOKEN_TYPE_BEARER,
             "expires_in": settings.access_token_expire_seconds,
             "last_login": to_iso_z(last),
         },

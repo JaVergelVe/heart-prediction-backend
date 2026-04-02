@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter
 
 from app.core.config import get_settings
+from app.core.constants import STATUS_HEALTHY, STATUS_NOT_CONFIGURED, STATUS_UNHEALTHY
 from app.core.database import DatabaseHealthStatus, check_database
 
 router = APIRouter(tags=["health"])
@@ -16,9 +17,9 @@ def health() -> dict:
     db_health = check_database()
     db_status = db_health.value
     overall = (
-        "healthy"
+        STATUS_HEALTHY
         if db_health is DatabaseHealthStatus.HEALTHY
-        else "unhealthy"
+        else STATUS_UNHEALTHY
     )
     return {
         "status": overall,
@@ -26,6 +27,6 @@ def health() -> dict:
         "version": settings.api_version,
         "services": {
             "database": db_status,
-            "ml_model": "not_configured",
+            "ml_model": STATUS_NOT_CONFIGURED,
         },
     }

@@ -5,7 +5,9 @@ from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-SexLiteral = Literal["Male", "Female"]
+from app.core.constants import SEX_FEMALE, SEX_MALE
+
+SexLiteral = Literal[SEX_MALE, SEX_FEMALE]
 RemovedTeethLiteral = Literal[
     "None of them",
     "1 to 5",
