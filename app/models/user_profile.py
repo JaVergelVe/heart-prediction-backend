@@ -6,6 +6,7 @@ import uuid
 from sqlalchemy import Date, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.constants import validation as v
 from app.models.base import Base, TimestampMixin
 
 
@@ -14,23 +15,23 @@ def _new_uuid_str() -> str:
 
 
 class UserProfile(Base, TimestampMixin):
-    __tablename__ = "user_profiles"
+    __tablename__ = v.TABLE_USER_PROFILES
 
     id: Mapped[str] = mapped_column(
-        String(36),
+        String(v.DB_UUID_STR_LEN),
         primary_key=True,
         default=_new_uuid_str,
     )
     user_id: Mapped[str] = mapped_column(
-        String(36),
-        ForeignKey("users.id", ondelete="CASCADE"),
+        String(v.DB_UUID_STR_LEN),
+        ForeignKey(v.FK_USERS_ID, ondelete=v.ON_DELETE_CASCADE),
         unique=True,
         nullable=False,
     )
-    state: Mapped[str | None] = mapped_column(String(100))
-    sex: Mapped[str | None] = mapped_column(String(10))
+    sex: Mapped[str | None] = mapped_column(String(v.DB_SEX_MAX_LEN))
     birth_date: Mapped[date | None] = mapped_column(Date)
-    age_category: Mapped[str | None] = mapped_column(String(64))
-    height_meters: Mapped[float | None] = mapped_column(Numeric(4, 2))
-    race_ethnicity_category: Mapped[str | None] = mapped_column(String(128))
-    removed_teeth: Mapped[str | None] = mapped_column(String(64))
+    age_category: Mapped[str | None] = mapped_column(String(v.DB_AGE_CATEGORY_MAX_LEN))
+    height_meters: Mapped[float | None] = mapped_column(
+        Numeric(v.DB_HEIGHT_METERS_PRECISION, v.DB_HEIGHT_METERS_SCALE),
+    )
+    removed_teeth: Mapped[str | None] = mapped_column(String(v.DB_REMOVED_TEETH_MAX_LEN))
