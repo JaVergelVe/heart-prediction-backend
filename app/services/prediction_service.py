@@ -50,38 +50,9 @@ def _survey_fields_from_authenticated(body: AuthenticatedPredictionRequest) -> d
 def _coerce_survey_for_db_persist(survey: dict[str, Any]) -> dict[str, Any]:
     """Fill omitted optional fields with CHECK-compliant values (MySQL NOT NULL + chk_*)."""
     out = dict(survey)
-    if out.get(msg_c.KEY_GENERAL_HEALTH) is None:
-        out[msg_c.KEY_GENERAL_HEALTH] = pred_c.PERSIST_DEFAULT_GENERAL_HEALTH
-    if out.get(msg_c.KEY_PHYSICAL_HEALTH_DAYS) is None:
-        out[msg_c.KEY_PHYSICAL_HEALTH_DAYS] = pred_c.PERSIST_DEFAULT_HEALTH_DAYS
-    if out.get(msg_c.KEY_MENTAL_HEALTH_DAYS) is None:
-        out[msg_c.KEY_MENTAL_HEALTH_DAYS] = pred_c.PERSIST_DEFAULT_HEALTH_DAYS
-    if out.get(msg_c.KEY_LAST_CHECKUP_TIME) is None:
-        out[msg_c.KEY_LAST_CHECKUP_TIME] = pred_c.PERSIST_DEFAULT_LAST_CHECKUP_TIME
-    if out.get(msg_c.KEY_PHYSICAL_ACTIVITIES) is None:
-        out[msg_c.KEY_PHYSICAL_ACTIVITIES] = pred_c.PERSIST_DEFAULT_BOOL
-    if out.get(msg_c.KEY_SLEEP_HOURS) is None:
-        out[msg_c.KEY_SLEEP_HOURS] = pred_c.PERSIST_DEFAULT_SLEEP_HOURS
-    if out.get(msg_c.KEY_SMOKER_STATUS) is None:
-        out[msg_c.KEY_SMOKER_STATUS] = pred_c.PERSIST_DEFAULT_SMOKER_STATUS
-    if out.get(msg_c.KEY_ECIGARETTE_USAGE) is None:
-        out[msg_c.KEY_ECIGARETTE_USAGE] = pred_c.PERSIST_DEFAULT_ECIGARETTE_USAGE
-    if out.get(msg_c.KEY_ALCOHOL_DRINKERS) is None:
-        out[msg_c.KEY_ALCOHOL_DRINKERS] = pred_c.PERSIST_DEFAULT_BOOL
-    if out.get(msg_c.KEY_CHEST_SCAN) is None:
-        out[msg_c.KEY_CHEST_SCAN] = pred_c.PERSIST_DEFAULT_BOOL
-    if out.get(msg_c.KEY_HIV_TESTING) is None:
-        out[msg_c.KEY_HIV_TESTING] = pred_c.PERSIST_DEFAULT_BOOL
-    if out.get(msg_c.KEY_FLU_VAX_LAST_12) is None:
-        out[msg_c.KEY_FLU_VAX_LAST_12] = pred_c.PERSIST_DEFAULT_BOOL
-    if out.get(msg_c.KEY_PNEUMO_VAX_EVER) is None:
-        out[msg_c.KEY_PNEUMO_VAX_EVER] = pred_c.PERSIST_DEFAULT_BOOL
-    if out.get(msg_c.KEY_TETANUS_LAST_10_TDAP) is None:
-        out[msg_c.KEY_TETANUS_LAST_10_TDAP] = pred_c.PERSIST_DEFAULT_TETANUS_LAST_10_TDAP
-    if out.get(msg_c.KEY_HIGH_RISK_LAST_YEAR) is None:
-        out[msg_c.KEY_HIGH_RISK_LAST_YEAR] = pred_c.PERSIST_DEFAULT_BOOL
-    if out.get(msg_c.KEY_COVID_POS) is None:
-        out[msg_c.KEY_COVID_POS] = pred_c.PERSIST_DEFAULT_COVID_POS
+    for key, default in pred_c.SURVEY_DB_DEFAULTS:
+        if out.get(key) is None:
+            out[key] = default
     return out
 
 

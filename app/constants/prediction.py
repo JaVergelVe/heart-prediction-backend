@@ -1,7 +1,8 @@
 """Risk labels, thresholds, and predictions table constraint metadata."""
 
-from typing import Final
+from typing import Any, Final
 
+from app.constants import messages as msg_c
 from app.constants import prediction_survey as ps
 from app.constants import validation as v
 
@@ -33,6 +34,26 @@ PERSIST_DEFAULT_TETANUS_LAST_10_TDAP: Final[str] = ps.TetanusLast10Tdap.NO_NOT_I
 PERSIST_DEFAULT_BOOL: Final[bool] = False
 PERSIST_DEFAULT_HEALTH_DAYS: Final[int] = 0
 PERSIST_DEFAULT_SLEEP_HOURS: Final[float] = 0.0
+
+# Order: key → default when value is missing or None (persist + ML coercion).
+SURVEY_DB_DEFAULTS: Final[tuple[tuple[str, Any], ...]] = (
+    (msg_c.KEY_GENERAL_HEALTH, PERSIST_DEFAULT_GENERAL_HEALTH),
+    (msg_c.KEY_PHYSICAL_HEALTH_DAYS, PERSIST_DEFAULT_HEALTH_DAYS),
+    (msg_c.KEY_MENTAL_HEALTH_DAYS, PERSIST_DEFAULT_HEALTH_DAYS),
+    (msg_c.KEY_LAST_CHECKUP_TIME, PERSIST_DEFAULT_LAST_CHECKUP_TIME),
+    (msg_c.KEY_PHYSICAL_ACTIVITIES, PERSIST_DEFAULT_BOOL),
+    (msg_c.KEY_SLEEP_HOURS, PERSIST_DEFAULT_SLEEP_HOURS),
+    (msg_c.KEY_SMOKER_STATUS, PERSIST_DEFAULT_SMOKER_STATUS),
+    (msg_c.KEY_ECIGARETTE_USAGE, PERSIST_DEFAULT_ECIGARETTE_USAGE),
+    (msg_c.KEY_ALCOHOL_DRINKERS, PERSIST_DEFAULT_BOOL),
+    (msg_c.KEY_CHEST_SCAN, PERSIST_DEFAULT_BOOL),
+    (msg_c.KEY_HIV_TESTING, PERSIST_DEFAULT_BOOL),
+    (msg_c.KEY_FLU_VAX_LAST_12, PERSIST_DEFAULT_BOOL),
+    (msg_c.KEY_PNEUMO_VAX_EVER, PERSIST_DEFAULT_BOOL),
+    (msg_c.KEY_TETANUS_LAST_10_TDAP, PERSIST_DEFAULT_TETANUS_LAST_10_TDAP),
+    (msg_c.KEY_HIGH_RISK_LAST_YEAR, PERSIST_DEFAULT_BOOL),
+    (msg_c.KEY_COVID_POS, PERSIST_DEFAULT_COVID_POS),
+)
 
 PREDICTIONS_CHECK_NAME: Final[str] = "ck_predictions_user_or_session"
 PREDICTIONS_CHECK_SQL: Final[str] = (
