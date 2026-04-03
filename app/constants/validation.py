@@ -16,6 +16,14 @@ MIN_LOGIN_PASSWORD_LENGTH: Final[int] = 1
 HEIGHT_METERS_MIN: Final[float] = 0.5
 HEIGHT_METERS_MAX: Final[float] = 2.5
 
+# --- Prediction input (survey / vitals) ---
+WEIGHT_KG_MIN: Final[float] = 20.0
+WEIGHT_KG_MAX: Final[float] = 300.0
+PHYSICAL_MENTAL_HEALTH_DAYS_MIN: Final[int] = 0
+PHYSICAL_MENTAL_HEALTH_DAYS_MAX: Final[int] = 30
+SLEEP_HOURS_MIN: Final[float] = 0.0
+SLEEP_HOURS_MAX: Final[float] = 24.0
+
 # --- User row ---
 DEFAULT_USER_IS_ACTIVE: Final[bool] = True
 
@@ -66,13 +74,13 @@ DB_BMI_PRECISION: Final[int] = 5
 DB_BMI_SCALE: Final[int] = 2
 DB_GENERAL_HEALTH_MAX_LEN: Final[int] = 20
 DB_LAST_CHECKUP_MAX_LEN: Final[int] = 100
-DB_SMOKER_STATUS_MAX_LEN: Final[int] = 80
+DB_SMOKER_STATUS_MAX_LEN: Final[int] = 50
 DB_ECIGARETTE_MAX_LEN: Final[int] = 100
 DB_TETANUS_MAX_LEN: Final[int] = 100
 DB_COVID_POS_MAX_LEN: Final[int] = 100
 DB_RISK_LEVEL_MAX_LEN: Final[int] = 10
 DB_MODEL_VERSION_MAX_LEN: Final[int] = 50
-DB_SESSION_ID_MAX_LEN: Final[int] = 64
+DB_SESSION_ID_MAX_LEN: Final[int] = 255
 DB_SLEEP_HOURS_PRECISION: Final[int] = 3
 DB_SLEEP_HOURS_SCALE: Final[int] = 1
 DB_PREDICTION_PROB_PRECISION: Final[int] = 5

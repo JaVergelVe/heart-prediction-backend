@@ -22,8 +22,12 @@ API_V1_PREFIX: Final[str] = "/v1"
 # Routers
 ROUTER_PREFIX_AUTH: Final[str] = "/auth"
 ROUTER_PREFIX_USERS: Final[str] = "/users"
+ROUTER_PREFIX_PREDICTIONS: Final[str] = "/predictions"
 ROUTER_TAG_AUTH: Final[str] = "auth"
 ROUTER_TAG_USERS: Final[str] = "users"
+ROUTER_TAG_PREDICTIONS: Final[str] = "predictions"
+
+ROUTE_PREDICTIONS_ANONYMOUS: Final[str] = "/anonymous"
 
 ROUTE_REGISTER: Final[str] = "/register"
 ROUTE_LOGIN: Final[str] = "/login"

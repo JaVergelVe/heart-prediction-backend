@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     debug: bool = val_c.DEBUG_DEFAULT
     api_version: str = val_c.API_VERSION_DEFAULT
     database_url: str | None = None
+    ml_models_dir: str | None = None
     jwt_secret_key: str = auth_c.JWT_SECRET_KEY_DEV_PLACEHOLDER
     jwt_algorithm: str = auth_c.JWT_ALGORITHM_DEFAULT
     access_token_expire_seconds: int = auth_c.ACCESS_TOKEN_EXPIRE_SECONDS_DEFAULT
