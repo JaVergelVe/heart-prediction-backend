@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import asc, desc, func, select
 from sqlalchemy.orm import Session
 
 from app.constants import http as http_c
@@ -203,6 +203,131 @@ def create_authenticated_prediction(
     db.commit()
     db.refresh(row)
 
+    return _prediction_to_response_dict(
+        row,
+        **{
+            msg_c.KEY_PREDICTED_CLASS: ml_out[msg_c.KEY_PREDICTED_CLASS],
+            msg_c.KEY_SHAP_EXPLANATION: ml_out[msg_c.KEY_SHAP_EXPLANATION],
+        },
+    )
+
+
+def _survey_from_prediction_row(row: Prediction) -> dict[str, Any]:
+    return {
+        msg_c.KEY_GENERAL_HEALTH: row.general_health,
+        msg_c.KEY_PHYSICAL_HEALTH_DAYS: row.physical_health_days,
+        msg_c.KEY_MENTAL_HEALTH_DAYS: row.mental_health_days,
+        msg_c.KEY_LAST_CHECKUP_TIME: row.last_checkup_time,
+        msg_c.KEY_PHYSICAL_ACTIVITIES: row.physical_activities,
+        msg_c.KEY_SLEEP_HOURS: float(row.sleep_hours) if row.sleep_hours is not None else None,
+        msg_c.KEY_SMOKER_STATUS: row.smoker_status,
+        msg_c.KEY_ECIGARETTE_USAGE: row.ecigarette_usage,
+        msg_c.KEY_ALCOHOL_DRINKERS: row.alcohol_drinkers,
+        msg_c.KEY_CHEST_SCAN: row.chest_scan,
+        msg_c.KEY_HIV_TESTING: row.hiv_testing,
+        msg_c.KEY_FLU_VAX_LAST_12: row.flu_vax_last_12,
+        msg_c.KEY_PNEUMO_VAX_EVER: row.pneumo_vax_ever,
+        msg_c.KEY_TETANUS_LAST_10_TDAP: row.tetanus_last_10_tdap,
+        msg_c.KEY_HIGH_RISK_LAST_YEAR: row.high_risk_last_year,
+        msg_c.KEY_COVID_POS: row.covid_pos,
+    }
+
+
+def _history_item_dict(row: Prediction) -> dict[str, Any]:
+    ts = row.prediction_timestamp
+    return {
+        msg_c.KEY_PREDICTION_ID: row.id,
+        msg_c.KEY_PREDICTION_PROBABILITY: float(row.prediction_probability)
+        if row.prediction_probability is not None
+        else None,
+        msg_c.KEY_RISK_LEVEL: row.risk_level,
+        msg_c.KEY_BMI: float(row.bmi) if row.bmi is not None else None,
+        msg_c.KEY_WEIGHT_KILOGRAMS: float(row.weight_kilograms)
+        if row.weight_kilograms is not None
+        else None,
+        msg_c.KEY_GENERAL_HEALTH: row.general_health,
+        msg_c.KEY_PREDICTION_TIMESTAMP: ts.isoformat() if ts is not None else None,
+    }
+
+
+def list_prediction_history(
+    db: Session,
+    user_id: str,
+    *,
+    limit: int,
+    offset: int,
+    sort: str,
+    order: str,
+) -> dict[str, Any]:
+    if sort != pred_c.HISTORY_SORT_PREDICTION_TIMESTAMP:
+        raise APIError(
+            http_c.HTTP_400_BAD_REQUEST,
+            code=msg_c.ERROR_CODE_VALIDATION,
+            message=msg_c.MSG_HISTORY_INVALID_SORT,
+        )
+    if order not in (pred_c.HISTORY_ORDER_DESC, pred_c.HISTORY_ORDER_ASC):
+        raise APIError(
+            http_c.HTTP_400_BAD_REQUEST,
+            code=msg_c.ERROR_CODE_VALIDATION,
+            message=msg_c.MSG_HISTORY_INVALID_ORDER,
+        )
+
+    base = select(Prediction).where(Prediction.user_id == user_id)
+    count_q = select(func.count()).select_from(Prediction).where(Prediction.user_id == user_id)
+    total = int(db.scalar(count_q) or 0)
+
+    order_col = Prediction.prediction_timestamp
+    ord_fn = desc if order == pred_c.HISTORY_ORDER_DESC else asc
+    rows = db.scalars(
+        base.order_by(ord_fn(order_col)).offset(offset).limit(limit)
+    ).all()
+
+    items = [_history_item_dict(r) for r in rows]
+    has_more = offset + len(items) < total
+    return {
+        msg_c.KEY_PREDICTIONS: items,
+        msg_c.KEY_PAGINATION: {
+            msg_c.KEY_TOTAL: total,
+            msg_c.KEY_LIMIT: limit,
+            msg_c.KEY_OFFSET: offset,
+            msg_c.KEY_HAS_MORE: has_more,
+        },
+    }
+
+
+def get_prediction_detail(db: Session, user_id: str, prediction_id: str) -> dict[str, Any]:
+    row = db.scalars(
+        select(Prediction).where(
+            Prediction.id == prediction_id,
+            Prediction.user_id == user_id,
+        )
+    ).first()
+    if row is None:
+        raise APIError(
+            http_c.HTTP_404_NOT_FOUND,
+            code=msg_c.ERROR_CODE_PREDICTION_NOT_FOUND,
+            message=msg_c.MSG_PREDICTION_NOT_FOUND,
+        )
+
+    profile = db.scalars(select(UserProfile).where(UserProfile.user_id == user_id)).first()
+    medical = db.scalars(
+        select(MedicalConditions).where(MedicalConditions.user_id == user_id)
+    ).first()
+    if profile is None or medical is None:
+        return _prediction_to_response_dict(row)
+
+    if row.bmi is None or row.weight_kilograms is None:
+        return _prediction_to_response_dict(row)
+
+    survey = _survey_from_prediction_row(row)
+    features: dict[str, Any] = {
+        msg_c.KEY_BMI: float(row.bmi),
+        msg_c.KEY_WEIGHT_KILOGRAMS: float(row.weight_kilograms),
+        msg_c.KEY_PROFILE: _profile_orm_to_dict(profile),
+        msg_c.KEY_MEDICAL_CONDITIONS: _medical_orm_to_dict(medical),
+        msg_c.KEY_SURVEY: survey,
+    }
+    ml_out = predict_heart_risk(features)
     return _prediction_to_response_dict(
         row,
         **{

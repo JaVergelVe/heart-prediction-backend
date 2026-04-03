@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import numpy as np
+import pandas as pd
 import shap
 from scipy import sparse
 from app.constants import http as http_c
@@ -93,17 +94,17 @@ def _validate_width(X: np.ndarray, bundle: Any) -> None:
 def _build_X_matrix(row: dict[str, Any], bundle: Any) -> np.ndarray:
     ohe = bundle.one_hot_encoder
     scaler = bundle.standard_scaler
-    X_cat = np.empty((1, len(ml_c.ONE_HOT_FEATURE_NAMES)), dtype=object)
-    for j, name in enumerate(ml_c.ONE_HOT_FEATURE_NAMES):
-        X_cat[0, j] = row[name]
-    ohe_raw = ohe.transform(X_cat)
+    cat_cols = list(ml_c.ONE_HOT_FEATURE_NAMES)
+    X_cat_df = pd.DataFrame([[row[c] for c in cat_cols]], columns=cat_cols)
+    ohe_raw = ohe.transform(X_cat_df)
     ohe_part = _to_dense2d(ohe_raw)
 
-    X_num = np.array(
-        [[float(row[name]) for name in ml_c.STANDARD_SCALE_FEATURE_NAMES]],
-        dtype=float,
+    num_cols = list(ml_c.STANDARD_SCALE_FEATURE_NAMES)
+    X_num_df = pd.DataFrame(
+        [[float(row[c]) for c in num_cols]],
+        columns=num_cols,
     )
-    num_part = scaler.transform(X_num)
+    num_part = scaler.transform(X_num_df)
 
     X_bin = np.array(
         [[float(row[name]) for name in ml_c.PASSTHROUGH_FEATURE_NAMES]],
@@ -128,7 +129,12 @@ def _build_X_matrix(row: dict[str, Any], bundle: Any) -> np.ndarray:
     return X
 
 
-def _predict_proba_matrix(model: Any, X: np.ndarray) -> np.ndarray:
+def _predict_proba_matrix(
+    model: Any, X: np.ndarray, feature_names: list[str] | None = None
+) -> np.ndarray:
+    if feature_names is not None and len(feature_names) == X.shape[1]:
+        X_df = pd.DataFrame(X, columns=feature_names, copy=False)
+        return model.predict_proba(X_df)
     return model.predict_proba(X)
 
 
@@ -154,7 +160,7 @@ def _top_shap_explanation(
     model = bundle.model
 
     def model_positive_proba(z: np.ndarray) -> np.ndarray:
-        p = _predict_proba_matrix(model, z)
+        p = _predict_proba_matrix(model, z, feature_names)
         return p[:, ml_c.POSITIVE_CLASS_PROB_INDEX]
 
     explainer = shap.KernelExplainer(model_positive_proba, bg_use)
@@ -218,14 +224,13 @@ def predict_heart_risk(features: dict[str, Any]) -> dict[str, Any]:
             raise FeatureLayoutError(
                 f"Feature width mismatch: model expects {model.n_features_in_}, got {X.shape[1]}"
             )
-        proba = _predict_proba_matrix(model, X)[0]
-        p_pos = float(proba[ml_c.POSITIVE_CLASS_PROB_INDEX])
-        probability_100 = round(p_pos * 100.0, val_c.DB_PREDICTION_PROB_SCALE)
-        pred_label = _predicted_class_label(model, proba)
-
         names = _full_feature_names(bundle)
         if len(names) != X.shape[1]:
             raise FeatureLayoutError("Feature name list width does not match X")
+        proba = _predict_proba_matrix(model, X, names)[0]
+        p_pos = float(proba[ml_c.POSITIVE_CLASS_PROB_INDEX])
+        probability_100 = round(p_pos * 100.0, val_c.DB_PREDICTION_PROB_SCALE)
+        pred_label = _predicted_class_label(model, proba)
         try:
             shap_explanation = _top_shap_explanation(bundle, X, names)
         except Exception as e:
