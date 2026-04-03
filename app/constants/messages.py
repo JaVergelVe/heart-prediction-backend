@@ -49,11 +49,45 @@ KEY_DIFFICULTY_WALKING: Final[str] = "difficulty_walking"
 KEY_DIFFICULTY_DRESSING_BATHING: Final[str] = "difficulty_dressing_bathing"
 KEY_DIFFICULTY_ERRANDS: Final[str] = "difficulty_errands"
 
+# --- Prediction (response + internal feature bundle keys) ---
+KEY_SURVEY: Final[str] = "survey"
+KEY_PREDICTION_ID: Final[str] = "prediction_id"
+KEY_SESSION_ID: Final[str] = "session_id"
+KEY_WEIGHT_KILOGRAMS: Final[str] = "weight_kilograms"
+KEY_BMI: Final[str] = "bmi"
+KEY_PREDICTION_PROBABILITY: Final[str] = "prediction_probability"
+KEY_RISK_LEVEL: Final[str] = "risk_level"
+KEY_MODEL_VERSION: Final[str] = "model_version"
+KEY_PREDICTION_TIMESTAMP: Final[str] = "prediction_timestamp"
+KEY_GENERAL_HEALTH: Final[str] = "general_health"
+KEY_PHYSICAL_HEALTH_DAYS: Final[str] = "physical_health_days"
+KEY_MENTAL_HEALTH_DAYS: Final[str] = "mental_health_days"
+KEY_LAST_CHECKUP_TIME: Final[str] = "last_checkup_time"
+KEY_PHYSICAL_ACTIVITIES: Final[str] = "physical_activities"
+KEY_SLEEP_HOURS: Final[str] = "sleep_hours"
+KEY_SMOKER_STATUS: Final[str] = "smoker_status"
+KEY_ECIGARETTE_USAGE: Final[str] = "ecigarette_usage"
+KEY_ALCOHOL_DRINKERS: Final[str] = "alcohol_drinkers"
+KEY_CHEST_SCAN: Final[str] = "chest_scan"
+KEY_HIV_TESTING: Final[str] = "hiv_testing"
+KEY_FLU_VAX_LAST_12: Final[str] = "flu_vax_last_12"
+KEY_PNEUMO_VAX_EVER: Final[str] = "pneumo_vax_ever"
+KEY_TETANUS_LAST_10_TDAP: Final[str] = "tetanus_last_10_tdap"
+KEY_HIGH_RISK_LAST_YEAR: Final[str] = "high_risk_last_year"
+KEY_COVID_POS: Final[str] = "covid_pos"
+KEY_PREDICTED_CLASS: Final[str] = "predicted_class"
+KEY_SHAP_EXPLANATION: Final[str] = "shap_explanation"
+KEY_SHAP_FEATURE_NAME: Final[str] = "feature_name"
+KEY_SHAP_IMPACT_SCORE: Final[str] = "impact_score"
+KEY_SHAP_DIRECTION: Final[str] = "direction"
+KEY_SHAP_MESSAGE: Final[str] = "message"
+
 # --- Error codes ---
 ERROR_CODE_VALIDATION: Final[str] = "VALIDATION_ERROR"
 ERROR_CODE_INVALID_CREDENTIALS: Final[str] = "INVALID_CREDENTIALS"
 ERROR_CODE_UNAUTHORIZED: Final[str] = "UNAUTHORIZED"
 ERROR_CODE_INTERNAL: Final[str] = "INTERNAL_ERROR"
+ERROR_CODE_PROFILE_INCOMPLETE: Final[str] = "PROFILE_INCOMPLETE"
 
 # --- Human-readable messages ---
 MSG_VALIDATION_FAILED: Final[str] = "Error en validación de datos"
@@ -62,6 +96,15 @@ MSG_TOKEN_INVALID_OR_EXPIRED: Final[str] = "Token inválido o expirado"
 MSG_TOKEN_REQUIRED: Final[str] = "Token de acceso requerido"
 MSG_VALIDATION_INVALID_INPUT: Final[str] = "Invalid input"
 MSG_PROFILE_INCOMPLETE: Final[str] = "Perfil de usuario incompleto"
+MSG_PREDICTION_PROFILE_INCOMPLETE: Final[str] = (
+    "Se requiere perfil y condiciones médicas completas para generar una predicción"
+)
+MSG_PREDICTION_HEIGHT_REQUIRED: Final[str] = (
+    "Se requiere altura en metros en el perfil para calcular el IMC"
+)
+MSG_BMI_OUT_OF_DB_RANGE: Final[str] = (
+    "El IMC calculado debe estar entre 10 y 100 según las reglas de la base de datos"
+)
 MSG_BIRTH_DATE_AGE_RANGE: Final[str] = "La edad debe estar entre 18 y 120 años"
 MSG_PASSWORD_NEED_LETTER: Final[str] = "La contraseña debe incluir al menos una letra"
 MSG_PASSWORD_NEED_DIGIT: Final[str] = "La contraseña debe incluir al menos un número"
