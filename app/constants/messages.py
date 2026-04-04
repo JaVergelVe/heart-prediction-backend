@@ -82,12 +82,21 @@ KEY_SHAP_IMPACT_SCORE: Final[str] = "impact_score"
 KEY_SHAP_DIRECTION: Final[str] = "direction"
 KEY_SHAP_MESSAGE: Final[str] = "message"
 
+# --- Paginated lists (predictions history) ---
+KEY_PREDICTIONS: Final[str] = "predictions"
+KEY_PAGINATION: Final[str] = "pagination"
+KEY_TOTAL: Final[str] = "total"
+KEY_LIMIT: Final[str] = "limit"
+KEY_OFFSET: Final[str] = "offset"
+KEY_HAS_MORE: Final[str] = "has_more"
+
 # --- Error codes ---
 ERROR_CODE_VALIDATION: Final[str] = "VALIDATION_ERROR"
 ERROR_CODE_INVALID_CREDENTIALS: Final[str] = "INVALID_CREDENTIALS"
 ERROR_CODE_UNAUTHORIZED: Final[str] = "UNAUTHORIZED"
 ERROR_CODE_INTERNAL: Final[str] = "INTERNAL_ERROR"
 ERROR_CODE_PROFILE_INCOMPLETE: Final[str] = "PROFILE_INCOMPLETE"
+ERROR_CODE_PREDICTION_NOT_FOUND: Final[str] = "PREDICTION_NOT_FOUND"
 
 # --- Human-readable messages ---
 MSG_VALIDATION_FAILED: Final[str] = "Error en validación de datos"
@@ -105,6 +114,9 @@ MSG_PREDICTION_HEIGHT_REQUIRED: Final[str] = (
 MSG_BMI_OUT_OF_DB_RANGE: Final[str] = (
     "El IMC calculado debe estar entre 10 y 100 según las reglas de la base de datos"
 )
+MSG_PREDICTION_NOT_FOUND: Final[str] = "Predicción no encontrada"
+MSG_HISTORY_INVALID_SORT: Final[str] = "Campo de ordenamiento no válido"
+MSG_HISTORY_INVALID_ORDER: Final[str] = "Orden debe ser asc o desc"
 MSG_BIRTH_DATE_AGE_RANGE: Final[str] = "La edad debe estar entre 18 y 120 años"
 MSG_PASSWORD_NEED_LETTER: Final[str] = "La contraseña debe incluir al menos una letra"
 MSG_PASSWORD_NEED_DIGIT: Final[str] = "La contraseña debe incluir al menos un número"

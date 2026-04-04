@@ -64,3 +64,11 @@ PREDICTIONS_CHECK_SQL: Final[str] = (
 IX_PREDICTIONS_USER_ID: Final[str] = "ix_predictions_user_id"
 IX_PREDICTIONS_PREDICTION_TIMESTAMP: Final[str] = "ix_predictions_prediction_timestamp"
 IX_PREDICTIONS_SESSION_ID: Final[str] = "ix_predictions_session_id"
+
+# History list (GET /predictions/history) — aligned with docs/api-contracts.md §2.3
+HISTORY_LIMIT_DEFAULT: Final[int] = 10
+HISTORY_LIMIT_MAX: Final[int] = 50
+HISTORY_OFFSET_DEFAULT: Final[int] = 0
+HISTORY_SORT_PREDICTION_TIMESTAMP: Final[str] = "prediction_timestamp"
+HISTORY_ORDER_DESC: Final[str] = "desc"
+HISTORY_ORDER_ASC: Final[str] = "asc"

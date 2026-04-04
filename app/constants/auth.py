@@ -28,6 +28,7 @@ ROUTER_TAG_USERS: Final[str] = "users"
 ROUTER_TAG_PREDICTIONS: Final[str] = "predictions"
 
 ROUTE_PREDICTIONS_ANONYMOUS: Final[str] = "/anonymous"
+ROUTE_PREDICTIONS_HISTORY: Final[str] = "/history"
 
 ROUTE_REGISTER: Final[str] = "/register"
 ROUTE_LOGIN: Final[str] = "/login"

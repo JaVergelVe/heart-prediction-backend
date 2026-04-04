@@ -1,12 +1,13 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.constants import auth as auth_c
 from app.constants import http as http_c
 from app.constants import messages as msg_c
+from app.constants import prediction as pred_c
 from app.core.database import get_db
 from app.models import User
 from app.schemas.prediction import AnonymousPredictionRequest, AuthenticatedPredictionRequest
@@ -32,5 +33,42 @@ def predict_authenticated(
     return {
         msg_c.KEY_DATA: prediction_service.create_authenticated_prediction(
             db, current_user.id, body
+        ),
+    }
+
+
+@router.get(auth_c.ROUTE_PREDICTIONS_HISTORY)
+def list_prediction_history(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    limit: Annotated[
+        int,
+        Query(ge=1, le=pred_c.HISTORY_LIMIT_MAX, description="Results per page"),
+    ] = pred_c.HISTORY_LIMIT_DEFAULT,
+    offset: Annotated[int, Query(ge=0, description="Pagination offset")] = pred_c.HISTORY_OFFSET_DEFAULT,
+    sort: Annotated[str, Query(description="Sort field")] = pred_c.HISTORY_SORT_PREDICTION_TIMESTAMP,
+    order: Annotated[str, Query(description="asc or desc")] = pred_c.HISTORY_ORDER_DESC,
+) -> dict:
+    return {
+        msg_c.KEY_DATA: prediction_service.list_prediction_history(
+            db,
+            current_user.id,
+            limit=limit,
+            offset=offset,
+            sort=sort,
+            order=order,
+        ),
+    }
+
+
+@router.get("/{prediction_id}")
+def get_prediction_detail(
+    prediction_id: str,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> dict:
+    return {
+        msg_c.KEY_DATA: prediction_service.get_prediction_detail(
+            db, current_user.id, prediction_id
         ),
     }
