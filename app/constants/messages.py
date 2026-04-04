@@ -97,6 +97,18 @@ ERROR_CODE_UNAUTHORIZED: Final[str] = "UNAUTHORIZED"
 ERROR_CODE_INTERNAL: Final[str] = "INTERNAL_ERROR"
 ERROR_CODE_PROFILE_INCOMPLETE: Final[str] = "PROFILE_INCOMPLETE"
 ERROR_CODE_PREDICTION_NOT_FOUND: Final[str] = "PREDICTION_NOT_FOUND"
+ERROR_CODE_INVALID_VARIABLE: Final[str] = "INVALID_VARIABLE"
+
+# --- What-if simulation (response keys) ---
+KEY_ORIGINAL_PROBABILITY: Final[str] = "original_probability"
+KEY_SIMULATED_PROBABILITY: Final[str] = "simulated_probability"
+KEY_ORIGINAL_RISK_LEVEL: Final[str] = "original_risk_level"
+KEY_SIMULATED_RISK_LEVEL: Final[str] = "simulated_risk_level"
+KEY_PROBABILITY_DIFFERENCE: Final[str] = "probability_difference"
+KEY_CHANGED_FIELDS: Final[str] = "changed_fields"
+KEY_RECOMMENDATIONS: Final[str] = "recommendations"
+KEY_ORIGINAL_VALUE: Final[str] = "original"
+KEY_SIMULATED_VALUE: Final[str] = "simulated"
 
 # --- Human-readable messages ---
 MSG_VALIDATION_FAILED: Final[str] = "Error en validación de datos"
@@ -115,6 +127,13 @@ MSG_BMI_OUT_OF_DB_RANGE: Final[str] = (
     "El IMC calculado debe estar entre 10 y 100 según las reglas de la base de datos"
 )
 MSG_PREDICTION_NOT_FOUND: Final[str] = "Predicción no encontrada"
+MSG_SIMULATION_VARIABLE_NOT_MODIFIABLE: Final[str] = "Variable no modificable"
+MSG_SIMULATION_REASON_FORBIDDEN: Final[str] = (
+    "Las variables demográficas y condiciones médicas crónicas no pueden modificarse en simulaciones"
+)
+MSG_SIMULATION_BASELINE_INCOMPLETE: Final[str] = (
+    "La predicción base no tiene los datos necesarios para simular"
+)
 MSG_HISTORY_INVALID_SORT: Final[str] = "Campo de ordenamiento no válido"
 MSG_HISTORY_INVALID_ORDER: Final[str] = "Orden debe ser asc o desc"
 MSG_BIRTH_DATE_AGE_RANGE: Final[str] = "La edad debe estar entre 18 y 120 años"

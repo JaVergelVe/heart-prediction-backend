@@ -29,6 +29,9 @@ ROUTER_TAG_PREDICTIONS: Final[str] = "predictions"
 
 ROUTE_PREDICTIONS_ANONYMOUS: Final[str] = "/anonymous"
 ROUTE_PREDICTIONS_HISTORY: Final[str] = "/history"
+ROUTE_PREDICTIONS_DETAIL: Final[str] = "/{prediction_id}"
+ROUTE_PREDICTIONS_EXPORT_PDF: Final[str] = "/{prediction_id}/export/pdf"
+ROUTE_PREDICTIONS_SIMULATE: Final[str] = "/{prediction_id}/simulate"
 
 ROUTE_REGISTER: Final[str] = "/register"
 ROUTE_LOGIN: Final[str] = "/login"

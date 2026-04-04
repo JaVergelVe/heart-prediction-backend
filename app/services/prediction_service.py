@@ -1,5 +1,6 @@
 """Create heart-risk predictions using the mock scorer and persist snapshots."""
 
+import math
 from datetime import datetime, timezone
 from typing import Any
 
@@ -13,7 +14,12 @@ from app.constants import validation as val_c
 from app.core.exceptions import APIError
 from app.ml.predictor import predict_heart_risk
 from app.models import MedicalConditions, Prediction, UserProfile
-from app.schemas.prediction import AnonymousPredictionRequest, AuthenticatedPredictionRequest
+from app.schemas.prediction import (
+    AnonymousPredictionRequest,
+    AuthenticatedPredictionRequest,
+    SimulationPatchRequest,
+)
+from app.services import pdf_export_service, recommendation_service
 
 
 def compute_bmi(weight_kg: float, height_m: float) -> float:
@@ -157,11 +163,18 @@ def create_anonymous_prediction(db: Session, body: AnonymousPredictionRequest) -
     db.commit()
     db.refresh(row)
 
+    recs = recommendation_service.build_prediction_recommendations(
+        risk_level=risk,
+        survey=survey_model,
+        shap_explanation=ml_out[msg_c.KEY_SHAP_EXPLANATION],
+        bmi=bmi,
+    )
     return _prediction_to_response_dict(
         row,
         **{
             msg_c.KEY_PREDICTED_CLASS: ml_out[msg_c.KEY_PREDICTED_CLASS],
             msg_c.KEY_SHAP_EXPLANATION: ml_out[msg_c.KEY_SHAP_EXPLANATION],
+            msg_c.KEY_RECOMMENDATIONS: recs,
         },
     )
 
@@ -203,11 +216,18 @@ def create_authenticated_prediction(
     db.commit()
     db.refresh(row)
 
+    recs = recommendation_service.build_prediction_recommendations(
+        risk_level=risk,
+        survey=survey_model,
+        shap_explanation=ml_out[msg_c.KEY_SHAP_EXPLANATION],
+        bmi=bmi,
+    )
     return _prediction_to_response_dict(
         row,
         **{
             msg_c.KEY_PREDICTED_CLASS: ml_out[msg_c.KEY_PREDICTED_CLASS],
             msg_c.KEY_SHAP_EXPLANATION: ml_out[msg_c.KEY_SHAP_EXPLANATION],
+            msg_c.KEY_RECOMMENDATIONS: recs,
         },
     )
 
@@ -313,13 +333,32 @@ def get_prediction_detail(db: Session, user_id: str, prediction_id: str) -> dict
     medical = db.scalars(
         select(MedicalConditions).where(MedicalConditions.user_id == user_id)
     ).first()
+    survey = _survey_from_prediction_row(row)
+
     if profile is None or medical is None:
-        return _prediction_to_response_dict(row)
+        recs = recommendation_service.build_prediction_recommendations(
+            risk_level=str(row.risk_level) if row.risk_level else None,
+            survey=survey,
+            shap_explanation=None,
+            bmi=float(row.bmi) if row.bmi is not None else None,
+        )
+        return _prediction_to_response_dict(
+            row,
+            **{msg_c.KEY_RECOMMENDATIONS: recs},
+        )
 
     if row.bmi is None or row.weight_kilograms is None:
-        return _prediction_to_response_dict(row)
+        recs = recommendation_service.build_prediction_recommendations(
+            risk_level=str(row.risk_level) if row.risk_level else None,
+            survey=survey,
+            shap_explanation=None,
+            bmi=None,
+        )
+        return _prediction_to_response_dict(
+            row,
+            **{msg_c.KEY_RECOMMENDATIONS: recs},
+        )
 
-    survey = _survey_from_prediction_row(row)
     features: dict[str, Any] = {
         msg_c.KEY_BMI: float(row.bmi),
         msg_c.KEY_WEIGHT_KILOGRAMS: float(row.weight_kilograms),
@@ -328,13 +367,130 @@ def get_prediction_detail(db: Session, user_id: str, prediction_id: str) -> dict
         msg_c.KEY_SURVEY: survey,
     }
     ml_out = predict_heart_risk(features)
+    recs = recommendation_service.build_prediction_recommendations(
+        risk_level=str(row.risk_level) if row.risk_level else None,
+        survey=survey,
+        shap_explanation=ml_out[msg_c.KEY_SHAP_EXPLANATION],
+        bmi=float(row.bmi),
+    )
     return _prediction_to_response_dict(
         row,
         **{
             msg_c.KEY_PREDICTED_CLASS: ml_out[msg_c.KEY_PREDICTED_CLASS],
             msg_c.KEY_SHAP_EXPLANATION: ml_out[msg_c.KEY_SHAP_EXPLANATION],
+            msg_c.KEY_RECOMMENDATIONS: recs,
         },
     )
+
+
+def validate_simulation_request_keys(body: dict[str, Any]) -> None:
+    for key in body:
+        if key not in pred_c.SIMULATION_ALLOWED_FIELDS:
+            raise APIError(
+                http_c.HTTP_400_BAD_REQUEST,
+                code=msg_c.ERROR_CODE_INVALID_VARIABLE,
+                message=msg_c.MSG_SIMULATION_VARIABLE_NOT_MODIFIABLE,
+                details={
+                    msg_c.KEY_FIELD: key,
+                    msg_c.KEY_REASON: msg_c.MSG_SIMULATION_REASON_FORBIDDEN,
+                },
+            )
+
+
+def _values_differ(a: Any, b: Any) -> bool:
+    if isinstance(a, bool) and isinstance(b, bool):
+        return a != b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return not math.isclose(float(a), float(b), rel_tol=0.0, abs_tol=1e-4)
+    return a != b
+
+
+def simulate_what_if(
+    db: Session, user_id: str, prediction_id: str, body: SimulationPatchRequest
+) -> dict[str, Any]:
+    row = db.scalars(
+        select(Prediction).where(
+            Prediction.id == prediction_id,
+            Prediction.user_id == user_id,
+        )
+    ).first()
+    if row is None:
+        raise APIError(
+            http_c.HTTP_404_NOT_FOUND,
+            code=msg_c.ERROR_CODE_PREDICTION_NOT_FOUND,
+            message=msg_c.MSG_PREDICTION_NOT_FOUND,
+        )
+
+    profile, medical = _require_profile_and_medical(db, user_id)
+    height = _require_height_meters(
+        float(profile.height_meters) if profile.height_meters is not None else None
+    )
+
+    if row.prediction_probability is None or row.weight_kilograms is None:
+        raise APIError(
+            http_c.HTTP_400_BAD_REQUEST,
+            code=msg_c.ERROR_CODE_VALIDATION,
+            message=msg_c.MSG_SIMULATION_BASELINE_INCOMPLETE,
+        )
+
+    original_probability = float(row.prediction_probability)
+    original_risk = (
+        str(row.risk_level)
+        if row.risk_level is not None
+        else risk_level_from_probability(original_probability)
+    )
+
+    baseline_weight = float(row.weight_kilograms)
+    baseline_survey = _survey_from_prediction_row(row)
+
+    patch_dict = body.model_dump(exclude_unset=True, exclude_none=True)
+    merged_weight = patch_dict.get(msg_c.KEY_WEIGHT_KILOGRAMS, baseline_weight)
+    survey_updates = {
+        k: v for k, v in patch_dict.items() if k != msg_c.KEY_WEIGHT_KILOGRAMS
+    }
+    merged_survey = {**baseline_survey, **survey_updates}
+    merged_survey_model = _coerce_survey_for_db_persist(dict(merged_survey))
+
+    bmi_sim = compute_bmi(merged_weight, height)
+    _ensure_bmi_for_db(bmi_sim)
+
+    features: dict[str, Any] = {
+        msg_c.KEY_BMI: bmi_sim,
+        msg_c.KEY_WEIGHT_KILOGRAMS: merged_weight,
+        msg_c.KEY_PROFILE: _profile_orm_to_dict(profile),
+        msg_c.KEY_MEDICAL_CONDITIONS: _medical_orm_to_dict(medical),
+        msg_c.KEY_SURVEY: merged_survey_model,
+    }
+    ml_out = predict_heart_risk(features)
+    simulated_probability = float(ml_out[msg_c.KEY_PREDICTION_PROBABILITY])
+    simulated_risk = risk_level_from_probability(simulated_probability)
+
+    changed_fields: dict[str, Any] = {}
+    if _values_differ(baseline_weight, merged_weight):
+        changed_fields[msg_c.KEY_WEIGHT_KILOGRAMS] = {
+            msg_c.KEY_ORIGINAL_VALUE: baseline_weight,
+            msg_c.KEY_SIMULATED_VALUE: merged_weight,
+        }
+    for sk, bv in baseline_survey.items():
+        mv = merged_survey[sk]
+        if _values_differ(bv, mv):
+            changed_fields[sk] = {
+                msg_c.KEY_ORIGINAL_VALUE: bv,
+                msg_c.KEY_SIMULATED_VALUE: mv,
+            }
+
+    return {
+        msg_c.KEY_ORIGINAL_PROBABILITY: original_probability,
+        msg_c.KEY_SIMULATED_PROBABILITY: simulated_probability,
+        msg_c.KEY_ORIGINAL_RISK_LEVEL: original_risk,
+        msg_c.KEY_SIMULATED_RISK_LEVEL: simulated_risk,
+        msg_c.KEY_PROBABILITY_DIFFERENCE: round(
+            simulated_probability - original_probability, val_c.DB_PREDICTION_PROB_SCALE
+        ),
+        msg_c.KEY_CHANGED_FIELDS: changed_fields,
+        msg_c.KEY_SHAP_EXPLANATION: ml_out[msg_c.KEY_SHAP_EXPLANATION],
+        msg_c.KEY_RECOMMENDATIONS: [],
+    }
 
 
 def _prediction_to_response_dict(row: Prediction, **extra: Any) -> dict[str, Any]:
@@ -371,4 +527,21 @@ def _prediction_to_response_dict(row: Prediction, **extra: Any) -> dict[str, Any
         msg_c.KEY_PREDICTION_TIMESTAMP: ts.isoformat() if ts is not None else None,
     }
     out.update(extra)
+    if msg_c.KEY_RECOMMENDATIONS not in out:
+        out[msg_c.KEY_RECOMMENDATIONS] = []
     return out
+
+
+def export_prediction_pdf(db: Session, user_id: str, prediction_id: str) -> tuple[bytes, str]:
+    """
+    Build a PDF for an owned prediction (same data basis as GET /predictions/{id}).
+
+    Returns (pdf_bytes, download_filename).
+    """
+    detail = get_prediction_detail(db, user_id, prediction_id)
+    filename = pdf_export_service.build_export_filename(
+        prediction_id=str(detail[msg_c.KEY_PREDICTION_ID]),
+        prediction_timestamp_iso=detail.get(msg_c.KEY_PREDICTION_TIMESTAMP),
+    )
+    pdf_bytes = pdf_export_service.build_prediction_pdf_bytes(detail)
+    return pdf_bytes, filename

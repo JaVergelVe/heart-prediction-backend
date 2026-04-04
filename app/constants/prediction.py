@@ -72,3 +72,36 @@ HISTORY_OFFSET_DEFAULT: Final[int] = 0
 HISTORY_SORT_PREDICTION_TIMESTAMP: Final[str] = "prediction_timestamp"
 HISTORY_ORDER_DESC: Final[str] = "desc"
 HISTORY_ORDER_ASC: Final[str] = "asc"
+
+# Query parameter bounds (GET /predictions/history)
+HISTORY_QUERY_LIMIT_GE_MIN: Final[int] = 1
+HISTORY_QUERY_OFFSET_GE_MIN: Final[int] = 0
+
+# OpenAPI / Swagger descriptions (Query)
+QUERY_DESC_HISTORY_LIMIT: Final[str] = "Results per page"
+QUERY_DESC_HISTORY_OFFSET: Final[str] = "Pagination offset"
+QUERY_DESC_HISTORY_SORT: Final[str] = "Sort field"
+QUERY_DESC_HISTORY_ORDER: Final[str] = "asc or desc"
+
+# POST /predictions/{id}/simulate — only lifestyle + weight (same as authenticated prediction input)
+SIMULATION_ALLOWED_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        msg_c.KEY_WEIGHT_KILOGRAMS,
+        msg_c.KEY_GENERAL_HEALTH,
+        msg_c.KEY_PHYSICAL_HEALTH_DAYS,
+        msg_c.KEY_MENTAL_HEALTH_DAYS,
+        msg_c.KEY_LAST_CHECKUP_TIME,
+        msg_c.KEY_PHYSICAL_ACTIVITIES,
+        msg_c.KEY_SLEEP_HOURS,
+        msg_c.KEY_SMOKER_STATUS,
+        msg_c.KEY_ECIGARETTE_USAGE,
+        msg_c.KEY_ALCOHOL_DRINKERS,
+        msg_c.KEY_CHEST_SCAN,
+        msg_c.KEY_HIV_TESTING,
+        msg_c.KEY_FLU_VAX_LAST_12,
+        msg_c.KEY_PNEUMO_VAX_EVER,
+        msg_c.KEY_TETANUS_LAST_10_TDAP,
+        msg_c.KEY_HIGH_RISK_LAST_YEAR,
+        msg_c.KEY_COVID_POS,
+    }
+)

@@ -1,6 +1,6 @@
 """Request bodies for prediction endpoints."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.constants import prediction_survey as survey_c
 from app.constants import validation as val_c
@@ -49,3 +49,15 @@ class AuthenticatedPredictionRequest(PredictionSurveyIn):
     """Authenticated prediction: weight and survey; profile/medical loaded server-side."""
 
     weight_kilograms: float = Field(..., ge=val_c.WEIGHT_KG_MIN, le=val_c.WEIGHT_KG_MAX)
+
+
+class SimulationPatchRequest(PredictionSurveyIn):
+    """What-if: optional overrides for weight and lifestyle survey fields only."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    weight_kilograms: float | None = Field(
+        None,
+        ge=val_c.WEIGHT_KG_MIN,
+        le=val_c.WEIGHT_KG_MAX,
+    )
