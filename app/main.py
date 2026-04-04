@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 
-from app.api.routes import auth, health, predictions, users
+from app.api.routes import auth, catalogs, health, predictions, users
 from app.constants import auth as auth_c
 from app.core.config import get_settings
 from app.core.exceptions import APIError, api_error_handler, validation_error_handler
@@ -21,3 +21,4 @@ app.include_router(health.router, prefix=auth_c.API_V1_PREFIX)
 app.include_router(auth.router, prefix=auth_c.API_V1_PREFIX)
 app.include_router(users.router, prefix=auth_c.API_V1_PREFIX)
 app.include_router(predictions.router, prefix=auth_c.API_V1_PREFIX)
+app.include_router(catalogs.router, prefix=auth_c.API_V1_PREFIX)
