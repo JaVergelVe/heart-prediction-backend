@@ -24,15 +24,18 @@ def _append_unique(recs: list[str], seen: set[str], text: str) -> bool:
 def _shap_substring_hints(feature_name: str) -> list[str]:
     f = feature_name.lower()
     out: list[str] = []
-    if "bmi" in f:
+    if rec_c.SHAP_FEATURE_SUBSTRING_BMI in f:
         out.append(rec_c.MSG_REC_SHAP_BMI)
-    if "generalhealth" in f or "general_health" in f:
+    if (
+        rec_c.SHAP_FEATURE_SUBSTRING_GENERAL_HEALTH in f
+        or rec_c.SHAP_FEATURE_SUBSTRING_GENERAL_HEALTH_SNAKE in f
+    ):
         out.append(rec_c.MSG_REC_SHAP_GENERAL_HEALTH)
-    if "smoker" in f or "smoke" in f:
+    if rec_c.SHAP_FEATURE_SUBSTRING_SMOKER in f or rec_c.SHAP_FEATURE_SUBSTRING_SMOKE in f:
         out.append(rec_c.MSG_REC_SHAP_SMOKING)
-    if "sleep" in f:
+    if rec_c.SHAP_FEATURE_SUBSTRING_SLEEP in f:
         out.append(rec_c.MSG_REC_SHAP_SLEEP)
-    if "physical" in f and "activit" in f:
+    if rec_c.SHAP_FEATURE_SUBSTRING_PHYSICAL in f and rec_c.SHAP_FEATURE_SUBSTRING_ACTIVIT in f:
         out.append(rec_c.MSG_REC_SHAP_ACTIVITY)
     return out
 

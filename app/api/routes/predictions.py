@@ -100,7 +100,7 @@ def simulate_prediction_what_if(
     responses={
         http_c.HTTP_200_OK: {
             "content": {"application/pdf": {}},
-            "description": "PDF file download",
+            "description": pdf_c.OPENAPI_RESPONSE_200_DESCRIPTION,
         },
     },
 )

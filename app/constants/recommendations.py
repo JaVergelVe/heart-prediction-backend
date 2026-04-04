@@ -48,6 +48,16 @@ MSG_REC_ALCOHOL_LIMIT: Final[str] = (
     "Consumo de alcohol reportado: discuta límites seguros con su profesional de salud."
 )
 
+# --- SHAP feature_name substring hints (lowercased model feature labels) ---
+SHAP_FEATURE_SUBSTRING_BMI: Final[str] = "bmi"
+SHAP_FEATURE_SUBSTRING_GENERAL_HEALTH: Final[str] = "generalhealth"
+SHAP_FEATURE_SUBSTRING_GENERAL_HEALTH_SNAKE: Final[str] = "general_health"
+SHAP_FEATURE_SUBSTRING_SMOKER: Final[str] = "smoker"
+SHAP_FEATURE_SUBSTRING_SMOKE: Final[str] = "smoke"
+SHAP_FEATURE_SUBSTRING_SLEEP: Final[str] = "sleep"
+SHAP_FEATURE_SUBSTRING_PHYSICAL: Final[str] = "physical"
+SHAP_FEATURE_SUBSTRING_ACTIVIT: Final[str] = "activit"
+
 # --- SHAP feature_name hints (substring match on model feature labels) ---
 MSG_REC_SHAP_BMI: Final[str] = (
     "El modelo destaca el IMC: priorizar peso saludable con orientación médica y nutricional."

@@ -30,11 +30,11 @@ def _timestamp_for_filename(iso: str | None) -> str:
     if not iso:
         return pdf_c.FILENAME_TIMESTAMP_UNKNOWN
     out = iso.strip()
-    for c in '<>:"/\\|?*':
+    for c in pdf_c.FILENAME_INVALID_CHARS:
         out = out.replace(c, "-")
-    out = out.replace(" ", "_")
-    if len(out) > 180:
-        out = out[:180]
+    out = out.replace(" ", pdf_c.FILENAME_SPACE_REPLACEMENT)
+    if len(out) > pdf_c.FILENAME_TIMESTAMP_MAX_LEN:
+        out = out[: pdf_c.FILENAME_TIMESTAMP_MAX_LEN]
     return out
 
 
@@ -48,77 +48,94 @@ def _format_value(val: Any) -> str:
     if isinstance(val, bool):
         return pdf_c.PDF_VALUE_YES if val else pdf_c.PDF_VALUE_NO
     if isinstance(val, float):
-        s = f"{val:.4f}".rstrip("0").rstrip(".")
-        return s if s else "0"
+        fmt = f"{{:.{pdf_c.PDF_FLOAT_DECIMALS}f}}"
+        s = fmt.format(val).rstrip(pdf_c.PDF_FLOAT_RSTRIP_TRAILING_ZERO).rstrip(
+            pdf_c.PDF_FLOAT_RSTRIP_TRAILING_DOT
+        )
+        return s if s else pdf_c.PDF_FLOAT_ZERO_DISPLAY
     return str(val)
 
 
 def build_prediction_pdf_bytes(detail: dict[str, Any]) -> bytes:
     """Render prediction detail dict (same shape as GET /predictions/{id}) as PDF bytes."""
     buf = BytesIO()
+    margin = inch * pdf_c.PDF_PAGE_MARGIN_INCHES
     doc = SimpleDocTemplate(
         buf,
         pagesize=letter,
-        leftMargin=inch * 0.75,
-        rightMargin=inch * 0.75,
-        topMargin=inch * 0.75,
-        bottomMargin=inch * 0.75,
+        leftMargin=margin,
+        rightMargin=margin,
+        topMargin=margin,
+        bottomMargin=margin,
     )
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(
-        "title",
+        pdf_c.PDF_PARAGRAPH_STYLE_NAME_TITLE,
         parent=styles["Title"],
-        fontSize=14,
-        leading=18,
-        spaceAfter=14,
+        fontSize=pdf_c.PDF_FONT_TITLE,
+        leading=pdf_c.PDF_FONT_TITLE_LEADING,
+        spaceAfter=pdf_c.PDF_FONT_TITLE_SPACE_AFTER,
     )
     h2 = ParagraphStyle(
-        "h2",
+        pdf_c.PDF_PARAGRAPH_STYLE_NAME_H2,
         parent=styles["Heading2"],
-        fontSize=12,
-        leading=15,
-        spaceBefore=10,
-        spaceAfter=8,
+        fontSize=pdf_c.PDF_FONT_H2,
+        leading=pdf_c.PDF_FONT_H2_LEADING,
+        spaceBefore=pdf_c.PDF_FONT_H2_SPACE_BEFORE,
+        spaceAfter=pdf_c.PDF_FONT_H2_SPACE_AFTER,
     )
     body = ParagraphStyle(
-        "body",
+        pdf_c.PDF_PARAGRAPH_STYLE_NAME_BODY,
         parent=styles["Normal"],
-        fontSize=10,
-        leading=13,
-        spaceAfter=6,
+        fontSize=pdf_c.PDF_FONT_BODY,
+        leading=pdf_c.PDF_FONT_BODY_LEADING,
+        spaceAfter=pdf_c.PDF_FONT_BODY_SPACE_AFTER,
     )
     small = ParagraphStyle(
-        "small",
+        pdf_c.PDF_PARAGRAPH_STYLE_NAME_SMALL,
         parent=styles["Normal"],
-        fontSize=9,
-        leading=12,
+        fontSize=pdf_c.PDF_FONT_DISCLAIMER,
+        leading=pdf_c.PDF_FONT_DISCLAIMER_LEADING,
         alignment=TA_JUSTIFY,
-        spaceAfter=8,
+        spaceAfter=pdf_c.PDF_FONT_DISCLAIMER_SPACE_AFTER,
     )
 
     story: list[Any] = []
     story.append(_p(pdf_c.PDF_TITLE, title_style))
-    story.append(Spacer(1, 0.1 * inch))
+    story.append(Spacer(1, pdf_c.PDF_TITLE_BOTTOM_SPACER_INCHES * inch))
 
     story.append(_p(pdf_c.PDF_SECTION_SUMMARY, h2))
     prob = detail.get(msg_c.KEY_PREDICTION_PROBABILITY)
-    prob_line = (
-        f"{pdf_c.PDF_LABEL_PROBABILITY}: {pdf_c.PDF_VALUE_NOT_AVAILABLE}"
-        if prob is None
-        else f"{pdf_c.PDF_LABEL_PROBABILITY}: {float(prob):.2f}{pdf_c.PDF_PROBABILITY_UNIT}"
-    )
+    if prob is None:
+        prob_line = pdf_c.PDF_LINE_LABEL_VALUE.format(
+            label=pdf_c.PDF_LABEL_PROBABILITY,
+            value=pdf_c.PDF_VALUE_NOT_AVAILABLE,
+        )
+    else:
+        prob_fmt = f"{{:.{pdf_c.PDF_PROBABILITY_DECIMALS}f}}"
+        prob_line = pdf_c.PDF_LINE_PROBABILITY.format(
+            label=pdf_c.PDF_LABEL_PROBABILITY,
+            value=prob_fmt.format(float(prob)),
+            unit=pdf_c.PDF_PROBABILITY_UNIT,
+        )
     story.append(_p(prob_line, body))
     rl = detail.get(msg_c.KEY_RISK_LEVEL)
     story.append(
         _p(
-            f"{pdf_c.PDF_LABEL_RISK_LEVEL}: {_format_value(rl)}",
+            pdf_c.PDF_LINE_LABEL_VALUE.format(
+                label=pdf_c.PDF_LABEL_RISK_LEVEL,
+                value=_format_value(rl),
+            ),
             body,
         )
     )
     ts = detail.get(msg_c.KEY_PREDICTION_TIMESTAMP)
     story.append(
         _p(
-            f"{pdf_c.PDF_LABEL_PREDICTION_TIMESTAMP}: {_format_value(ts)}",
+            pdf_c.PDF_LINE_LABEL_VALUE.format(
+                label=pdf_c.PDF_LABEL_PREDICTION_TIMESTAMP,
+                value=_format_value(ts),
+            ),
             body,
         )
     )
@@ -126,32 +143,49 @@ def build_prediction_pdf_bytes(detail: dict[str, Any]) -> bytes:
     story.append(_p(pdf_c.PDF_SECTION_INPUT_DATA, h2))
     for key, label in pdf_c.PDF_INPUT_FIELDS:
         val = detail.get(key)
-        story.append(_p(f"{label}: {_format_value(val)}", body))
+        story.append(
+            _p(
+                pdf_c.PDF_LINE_LABEL_VALUE.format(label=label, value=_format_value(val)),
+                body,
+            )
+        )
 
     story.append(_p(pdf_c.PDF_SECTION_SHAP, h2))
     shap = detail.get(msg_c.KEY_SHAP_EXPLANATION)
     if isinstance(shap, dict) and shap:
         story.append(
             _p(
-                f"{pdf_c.PDF_LABEL_SHAP_FEATURE}: {_format_value(shap.get(msg_c.KEY_SHAP_FEATURE_NAME))}",
+                pdf_c.PDF_LINE_LABEL_VALUE.format(
+                    label=pdf_c.PDF_LABEL_SHAP_FEATURE,
+                    value=_format_value(shap.get(msg_c.KEY_SHAP_FEATURE_NAME)),
+                ),
                 body,
             )
         )
         story.append(
             _p(
-                f"{pdf_c.PDF_LABEL_SHAP_IMPACT}: {_format_value(shap.get(msg_c.KEY_SHAP_IMPACT_SCORE))}",
+                pdf_c.PDF_LINE_LABEL_VALUE.format(
+                    label=pdf_c.PDF_LABEL_SHAP_IMPACT,
+                    value=_format_value(shap.get(msg_c.KEY_SHAP_IMPACT_SCORE)),
+                ),
                 body,
             )
         )
         story.append(
             _p(
-                f"{pdf_c.PDF_LABEL_SHAP_DIRECTION}: {_format_value(shap.get(msg_c.KEY_SHAP_DIRECTION))}",
+                pdf_c.PDF_LINE_LABEL_VALUE.format(
+                    label=pdf_c.PDF_LABEL_SHAP_DIRECTION,
+                    value=_format_value(shap.get(msg_c.KEY_SHAP_DIRECTION)),
+                ),
                 body,
             )
         )
         story.append(
             _p(
-                f"{pdf_c.PDF_LABEL_SHAP_MESSAGE}: {_format_value(shap.get(msg_c.KEY_SHAP_MESSAGE))}",
+                pdf_c.PDF_LINE_LABEL_VALUE.format(
+                    label=pdf_c.PDF_LABEL_SHAP_MESSAGE,
+                    value=_format_value(shap.get(msg_c.KEY_SHAP_MESSAGE)),
+                ),
                 body,
             )
         )
@@ -162,7 +196,10 @@ def build_prediction_pdf_bytes(detail: dict[str, Any]) -> bytes:
     recs = detail.get(msg_c.KEY_RECOMMENDATIONS) or []
     if isinstance(recs, list) and recs:
         for i, item in enumerate(recs, start=1):
-            line = f"{i}. {_format_value(item)}"
+            line = pdf_c.PDF_LINE_RECOMMENDATION_ITEM.format(
+                index=i,
+                text=_format_value(item),
+            )
             story.append(_p(line, body))
     else:
         story.append(_p(pdf_c.PDF_RECOMMENDATIONS_EMPTY, body))
