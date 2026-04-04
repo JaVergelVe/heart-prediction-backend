@@ -72,3 +72,13 @@ HISTORY_OFFSET_DEFAULT: Final[int] = 0
 HISTORY_SORT_PREDICTION_TIMESTAMP: Final[str] = "prediction_timestamp"
 HISTORY_ORDER_DESC: Final[str] = "desc"
 HISTORY_ORDER_ASC: Final[str] = "asc"
+
+# Pagination (Query validation): keep bounds explicit for OpenAPI / routes
+HISTORY_PAGINATION_MIN_LIMIT: Final[int] = 1
+HISTORY_PAGINATION_MIN_OFFSET: Final[int] = 0
+
+# OpenAPI descriptions (Swagger) — history query parameters
+HISTORY_QUERY_DESC_LIMIT: Final[str] = "Número de resultados por página"
+HISTORY_QUERY_DESC_OFFSET: Final[str] = "Desplazamiento para paginación"
+HISTORY_QUERY_DESC_SORT: Final[str] = "Campo de ordenamiento (solo prediction_timestamp)"
+HISTORY_QUERY_DESC_ORDER: Final[str] = "Orden: desc (más reciente primero) o asc"

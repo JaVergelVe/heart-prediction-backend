@@ -1,4 +1,3 @@
-"""Create heart-risk predictions using the mock scorer and persist snapshots."""
 
 from datetime import datetime, timezone
 from typing import Any
@@ -13,6 +12,7 @@ from app.constants import validation as val_c
 from app.core.exceptions import APIError
 from app.ml.predictor import predict_heart_risk
 from app.models import MedicalConditions, Prediction, UserProfile
+from app.services.recommendation_rules import build_recommendations_for_row
 from app.schemas.prediction import AnonymousPredictionRequest, AuthenticatedPredictionRequest
 
 
@@ -369,6 +369,7 @@ def _prediction_to_response_dict(row: Prediction, **extra: Any) -> dict[str, Any
         msg_c.KEY_RISK_LEVEL: row.risk_level,
         msg_c.KEY_MODEL_VERSION: row.model_version,
         msg_c.KEY_PREDICTION_TIMESTAMP: ts.isoformat() if ts is not None else None,
+        msg_c.KEY_RECOMMENDATIONS: build_recommendations_for_row(row),
     }
     out.update(extra)
     return out

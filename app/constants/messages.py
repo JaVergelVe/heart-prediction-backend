@@ -90,6 +90,12 @@ KEY_LIMIT: Final[str] = "limit"
 KEY_OFFSET: Final[str] = "offset"
 KEY_HAS_MORE: Final[str] = "has_more"
 
+# --- Recommendations (prediction responses; not persisted) ---
+KEY_RECOMMENDATIONS: Final[str] = "recommendations"
+KEY_RECOMMENDATION_TEXT: Final[str] = "text"
+KEY_RECOMMENDATION_CATEGORY: Final[str] = "category"
+KEY_RECOMMENDATION_PRIORITY: Final[str] = "priority"
+
 # --- Error codes ---
 ERROR_CODE_VALIDATION: Final[str] = "VALIDATION_ERROR"
 ERROR_CODE_INVALID_CREDENTIALS: Final[str] = "INVALID_CREDENTIALS"

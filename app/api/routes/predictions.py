@@ -43,11 +43,22 @@ def list_prediction_history(
     current_user: Annotated[User, Depends(get_current_user)],
     limit: Annotated[
         int,
-        Query(ge=1, le=pred_c.HISTORY_LIMIT_MAX, description="Results per page"),
+        Query(
+            ge=pred_c.HISTORY_PAGINATION_MIN_LIMIT,
+            le=pred_c.HISTORY_LIMIT_MAX,
+            description=pred_c.HISTORY_QUERY_DESC_LIMIT,
+        ),
     ] = pred_c.HISTORY_LIMIT_DEFAULT,
-    offset: Annotated[int, Query(ge=0, description="Pagination offset")] = pred_c.HISTORY_OFFSET_DEFAULT,
-    sort: Annotated[str, Query(description="Sort field")] = pred_c.HISTORY_SORT_PREDICTION_TIMESTAMP,
-    order: Annotated[str, Query(description="asc or desc")] = pred_c.HISTORY_ORDER_DESC,
+    offset: Annotated[
+        int,
+        Query(ge=pred_c.HISTORY_PAGINATION_MIN_OFFSET, description=pred_c.HISTORY_QUERY_DESC_OFFSET),
+    ] = pred_c.HISTORY_OFFSET_DEFAULT,
+    sort: Annotated[str, Query(description=pred_c.HISTORY_QUERY_DESC_SORT)] = (
+        pred_c.HISTORY_SORT_PREDICTION_TIMESTAMP
+    ),
+    order: Annotated[str, Query(description=pred_c.HISTORY_QUERY_DESC_ORDER)] = (
+        pred_c.HISTORY_ORDER_DESC
+    ),
 ) -> dict:
     return {
         msg_c.KEY_DATA: prediction_service.list_prediction_history(
