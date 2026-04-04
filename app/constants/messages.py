@@ -98,6 +98,7 @@ ERROR_CODE_INTERNAL: Final[str] = "INTERNAL_ERROR"
 ERROR_CODE_PROFILE_INCOMPLETE: Final[str] = "PROFILE_INCOMPLETE"
 ERROR_CODE_PREDICTION_NOT_FOUND: Final[str] = "PREDICTION_NOT_FOUND"
 ERROR_CODE_INVALID_VARIABLE: Final[str] = "INVALID_VARIABLE"
+ERROR_CODE_CATALOG_FIELD_NOT_SUPPORTED: Final[str] = "CATALOG_FIELD_NOT_SUPPORTED"
 
 # --- What-if simulation (response keys) ---
 KEY_ORIGINAL_PROBABILITY: Final[str] = "original_probability"
@@ -133,6 +134,10 @@ MSG_SIMULATION_REASON_FORBIDDEN: Final[str] = (
 )
 MSG_SIMULATION_BASELINE_INCOMPLETE: Final[str] = (
     "La predicción base no tiene los datos necesarios para simular"
+)
+MSG_CATALOG_FIELD_NOT_SUPPORTED: Final[str] = "Campo de catálogo no soportado"
+MSG_CATALOG_UNSUPPORTED_FIELD_REASON: Final[str] = (
+    "El campo no figura en el catálogo de valores permitidos."
 )
 MSG_HISTORY_INVALID_SORT: Final[str] = "Campo de ordenamiento no válido"
 MSG_HISTORY_INVALID_ORDER: Final[str] = "Orden debe ser asc o desc"
