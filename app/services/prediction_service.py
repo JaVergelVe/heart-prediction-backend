@@ -174,6 +174,7 @@ def create_anonymous_prediction(db: Session, body: AnonymousPredictionRequest) -
         **{
             msg_c.KEY_PREDICTED_CLASS: ml_out[msg_c.KEY_PREDICTED_CLASS],
             msg_c.KEY_SHAP_EXPLANATION: ml_out[msg_c.KEY_SHAP_EXPLANATION],
+            msg_c.KEY_SHAP_TOP_FACTORS: ml_out[msg_c.KEY_SHAP_TOP_FACTORS],
             msg_c.KEY_RECOMMENDATIONS: recs,
         },
     )
@@ -227,6 +228,7 @@ def create_authenticated_prediction(
         **{
             msg_c.KEY_PREDICTED_CLASS: ml_out[msg_c.KEY_PREDICTED_CLASS],
             msg_c.KEY_SHAP_EXPLANATION: ml_out[msg_c.KEY_SHAP_EXPLANATION],
+            msg_c.KEY_SHAP_TOP_FACTORS: ml_out[msg_c.KEY_SHAP_TOP_FACTORS],
             msg_c.KEY_RECOMMENDATIONS: recs,
         },
     )
@@ -378,6 +380,7 @@ def get_prediction_detail(db: Session, user_id: str, prediction_id: str) -> dict
         **{
             msg_c.KEY_PREDICTED_CLASS: ml_out[msg_c.KEY_PREDICTED_CLASS],
             msg_c.KEY_SHAP_EXPLANATION: ml_out[msg_c.KEY_SHAP_EXPLANATION],
+            msg_c.KEY_SHAP_TOP_FACTORS: ml_out[msg_c.KEY_SHAP_TOP_FACTORS],
             msg_c.KEY_RECOMMENDATIONS: recs,
         },
     )
@@ -489,6 +492,7 @@ def simulate_what_if(
         ),
         msg_c.KEY_CHANGED_FIELDS: changed_fields,
         msg_c.KEY_SHAP_EXPLANATION: ml_out[msg_c.KEY_SHAP_EXPLANATION],
+        msg_c.KEY_SHAP_TOP_FACTORS: ml_out[msg_c.KEY_SHAP_TOP_FACTORS],
         msg_c.KEY_RECOMMENDATIONS: [],
     }
 

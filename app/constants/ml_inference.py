@@ -113,6 +113,7 @@ POSITIVE_CLASS_PROB_INDEX: Final[int] = 1
 SHAP_KERNEL_NSAMPLES: Final[int] = 80
 SHAP_BACKGROUND_MAX_ROWS: Final[int] = 200
 SHAP_IMPACT_DECIMALS: Final[int] = 6
+SHAP_TOP_K: Final[int] = 5
 
 SHAP_DIRECTION_INCREASES_RISK: Final[str] = "increases_risk"
 SHAP_DIRECTION_DECREASES_RISK: Final[str] = "decreases_risk"
@@ -124,6 +125,15 @@ MSG_SHAP_INCREASES: Final[str] = (
 MSG_SHAP_DECREASES: Final[str] = (
     '"{feature}" es el factor con mayor contribución SHAP en esta predicción; '
     "empuja la probabilidad de la clase positiva hacia abajo."
+)
+
+MSG_SHAP_TOP_INTERP_INCREASES: Final[str] = (
+    'Rango {rank}: "{feature}" (valor en el vector de entrada del modelo: {feature_value}) '
+    "aumenta la contribución hacia la clase positiva; valor SHAP {contribution}."
+)
+MSG_SHAP_TOP_INTERP_DECREASES: Final[str] = (
+    'Rango {rank}: "{feature}" (valor en el vector de entrada del modelo: {feature_value}) '
+    "reduce la contribución hacia la clase positiva; valor SHAP {contribution}."
 )
 
 ERROR_ML_ARTIFACTS_MISSING: Final[str] = (

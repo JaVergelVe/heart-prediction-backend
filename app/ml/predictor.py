@@ -1,4 +1,4 @@
-"""Heart-risk inference: preprocess → MLP predict_proba → SHAP (single top feature)."""
+"""Heart-risk inference: preprocess → MLP predict_proba → SHAP (principal + top-K factores)."""
 
 from __future__ import annotations
 
@@ -146,11 +146,11 @@ def _predicted_class_label(model: Any, proba_row: np.ndarray) -> str:
     return str(idx)
 
 
-def _top_shap_explanation(
+def _shap_main_and_top_factors(
     bundle: Any,
     X: np.ndarray,
     feature_names: list[str],
-) -> dict[str, Any]:
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     bg = bundle.shap_background
     if bg.ndim != 2:
         raise ValueError("shap_background must be 2D")
@@ -169,34 +169,79 @@ def _top_shap_explanation(
     vec = np.ravel(arr[0]) if arr.ndim >= 2 else np.ravel(arr)
     if vec.shape[0] != len(feature_names):
         raise ValueError("SHAP vector length does not match feature name list")
-    idx = int(np.argmax(np.abs(vec)))
-    raw = float(vec[idx])
-    impact = abs(raw)
-    direction = (
+
+    k = min(ml_c.SHAP_TOP_K, int(vec.shape[0]))
+    order = np.argsort(-np.abs(vec))[:k]
+
+    idx0 = int(order[0])
+    raw0 = float(vec[idx0])
+    impact0 = abs(raw0)
+    direction0 = (
         ml_c.SHAP_DIRECTION_INCREASES_RISK
-        if raw >= 0
+        if raw0 >= 0
         else ml_c.SHAP_DIRECTION_DECREASES_RISK
     )
-    fname = feature_names[idx]
-    msg = (
-        ml_c.MSG_SHAP_INCREASES.format(feature=fname)
-        if raw >= 0
-        else ml_c.MSG_SHAP_DECREASES.format(feature=fname)
+    fname0 = feature_names[idx0]
+    msg0 = (
+        ml_c.MSG_SHAP_INCREASES.format(feature=fname0)
+        if raw0 >= 0
+        else ml_c.MSG_SHAP_DECREASES.format(feature=fname0)
     )
-    return {
-        msg_c.KEY_SHAP_FEATURE_NAME: fname,
-        msg_c.KEY_SHAP_IMPACT_SCORE: round(impact, ml_c.SHAP_IMPACT_DECIMALS),
-        msg_c.KEY_SHAP_DIRECTION: direction,
-        msg_c.KEY_SHAP_MESSAGE: msg,
+    main: dict[str, Any] = {
+        msg_c.KEY_SHAP_FEATURE_NAME: fname0,
+        msg_c.KEY_SHAP_IMPACT_SCORE: round(impact0, ml_c.SHAP_IMPACT_DECIMALS),
+        msg_c.KEY_SHAP_DIRECTION: direction0,
+        msg_c.KEY_SHAP_MESSAGE: msg0,
     }
+
+    top: list[dict[str, Any]] = []
+    for rank, j in enumerate(order, start=1):
+        j = int(j)
+        raw = float(vec[j])
+        direction = (
+            ml_c.SHAP_DIRECTION_INCREASES_RISK
+            if raw >= 0
+            else ml_c.SHAP_DIRECTION_DECREASES_RISK
+        )
+        fname = feature_names[j]
+        fval = float(X[0, j])
+        contrib = round(raw, ml_c.SHAP_IMPACT_DECIMALS)
+        fval_r = round(fval, ml_c.SHAP_IMPACT_DECIMALS)
+        interp = (
+            ml_c.MSG_SHAP_TOP_INTERP_INCREASES.format(
+                rank=rank,
+                feature=fname,
+                feature_value=fval_r,
+                contribution=contrib,
+            )
+            if raw >= 0
+            else ml_c.MSG_SHAP_TOP_INTERP_DECREASES.format(
+                rank=rank,
+                feature=fname,
+                feature_value=fval_r,
+                contribution=contrib,
+            )
+        )
+        top.append(
+            {
+                msg_c.KEY_SHAP_FEATURE_NAME: fname,
+                msg_c.KEY_SHAP_FEATURE_VALUE: fval_r,
+                msg_c.KEY_SHAP_CONTRIBUTION_SCORE: contrib,
+                msg_c.KEY_SHAP_RANK: rank,
+                msg_c.KEY_SHAP_INTERPRETATION: interp,
+                msg_c.KEY_SHAP_DIRECTION: direction,
+            }
+        )
+
+    return main, top
 
 
 def predict_heart_risk(features: dict[str, Any]) -> dict[str, Any]:
     """
     Run trained MLP on the feature bundle used by prediction_service.
 
-    Returns keys aligned with msg_c / persistence: probability 0–100, predicted_class,
-    model_version, shap_explanation (single dict).
+    Returns keys aligned with msg_c: probability 0–100, predicted_class, model_version,
+    shap_explanation (factor principal) y shap_top_factors (hasta SHAP_TOP_K por |SHAP|).
     """
     try:
         bundle = load_ml_bundle()
@@ -232,7 +277,7 @@ def predict_heart_risk(features: dict[str, Any]) -> dict[str, Any]:
         probability_100 = round(p_pos * 100.0, val_c.DB_PREDICTION_PROB_SCALE)
         pred_label = _predicted_class_label(model, proba)
         try:
-            shap_explanation = _top_shap_explanation(bundle, X, names)
+            shap_explanation, shap_top_factors = _shap_main_and_top_factors(bundle, X, names)
         except Exception as e:
             logger.warning("SHAP explanation failed: %s", e)
             shap_explanation = {
@@ -241,6 +286,7 @@ def predict_heart_risk(features: dict[str, Any]) -> dict[str, Any]:
                 msg_c.KEY_SHAP_DIRECTION: ml_c.SHAP_DIRECTION_INCREASES_RISK,
                 msg_c.KEY_SHAP_MESSAGE: ml_c.MSG_SHAP_FALLBACK,
             }
+            shap_top_factors = []
     except APIError:
         raise
     except FeatureLayoutError as e:
@@ -265,6 +311,7 @@ def predict_heart_risk(features: dict[str, Any]) -> dict[str, Any]:
         msg_c.KEY_PREDICTED_CLASS: pred_label,
         msg_c.KEY_MODEL_VERSION: ml_c.ML_MODEL_VERSION,
         msg_c.KEY_SHAP_EXPLANATION: shap_explanation,
+        msg_c.KEY_SHAP_TOP_FACTORS: shap_top_factors,
     }
 
 
