@@ -149,6 +149,9 @@ MSG_HISTORY_INVALID_ORDER: Final[str] = "Orden debe ser asc o desc"
 MSG_BIRTH_DATE_AGE_RANGE: Final[str] = "La edad debe estar entre 18 y 120 años"
 MSG_PASSWORD_NEED_LETTER: Final[str] = "La contraseña debe incluir al menos una letra"
 MSG_PASSWORD_NEED_DIGIT: Final[str] = "La contraseña debe incluir al menos un número"
+MSG_UPDATE_REQUIRES_ONE_FIELD: Final[str] = (
+    "Debe enviar al menos un campo para actualizar"
+)
 
 # --- Field / reason strings (validation & duplicate email) ---
 FIELD_EMAIL: Final[str] = "email"
