@@ -3,8 +3,9 @@ from collections.abc import Generator
 from enum import Enum
 
 from fastapi import HTTPException
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.constants import health as health_c
 from app.constants import http as http_c
@@ -27,7 +28,21 @@ class DatabaseHealthStatus(str, Enum):
 _settings = get_settings()
 
 if _settings.database_url:
-    engine = create_engine(_settings.database_url, pool_pre_ping=True)
+    _url = _settings.database_url
+    if _url.startswith("sqlite"):
+        engine = create_engine(
+            _url,
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+
+        @event.listens_for(engine, "connect")
+        def _sqlite_enable_foreign_keys(dbapi_connection, _connection_record) -> None:
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+    else:
+        engine = create_engine(_url, pool_pre_ping=True)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 else:
     engine = None
