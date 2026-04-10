@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Entorno — NUNCA subir a Git
+.env
+.env.production
+.env.local
+
+# Modelos ML (binarios grandes — usar S3 o git-lfs)
+app/ml/models/*.joblib
+!app/ml/models/.gitkeep
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/.terraform.lock.hcl
+infra/tfplan
+infra/terraform.tfvars
+
+# IDE
+.vscode/
+.idea/
+*.swp
