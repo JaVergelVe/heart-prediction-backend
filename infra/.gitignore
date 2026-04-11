@@ -1,0 +1,12 @@
+# Terraform state (contiene IPs, IDs de recursos — no subir a Git)
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+tfplan
+
+# Secrets — NUNCA subir a Git
+terraform.tfvars
+
+# Logs
+*.log

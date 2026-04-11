@@ -1,0 +1,60 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────
+# USO LOCAL (desarrollo / pruebas sin AWS)
+# docker-compose up -d
+# ─────────────────────────────────────────────
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: heart_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Sobreescribe el .env para desarrollo local con MySQL local
+      DATABASE_URL: mysql+pymysql://heart_user:heart_pass@db:3306/heart_attack_prediction
+      APP_NAME: "Heart Attack Prediction API"
+      DEBUG: "false"
+      API_VERSION: "1.0.0"
+      JWT_SECRET_KEY: "dev-secret-change-in-production"
+      ML_MODELS_DIR: /app/app/ml/models
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Monta los modelos ML si están fuera del contenedor
+      - ./app/ml/models:/app/app/ml/models:ro
+    networks:
+      - heart_net
+
+  db:
+    image: mysql:8.0
+    container_name: heart_db_local
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_pass
+      MYSQL_DATABASE: heart_attack_prediction
+      MYSQL_USER: heart_user
+      MYSQL_PASSWORD: heart_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "heart_user", "-pheart_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - heart_net
+
+volumes:
+  mysql_data:
+
+networks:
+  heart_net:
+    driver: bridge
