@@ -1,0 +1,31 @@
+# Copia este archivo a terraform.tfvars y completa los valores
+# cp terraform.tfvars.example terraform.tfvars
+# ⚠️ NUNCA subas terraform.tfvars a Git (contiene secrets)
+
+aws_region   = "us-east-1"
+project_name = "heart-prediction"
+environment  = "dev"
+
+# AMI Amazon Linux 2023 us-east-1 — verifica con:
+# aws ec2 describe-images --owners amazon \
+#   --filters "Name=name,Values=al2023-ami-*-x86_64" \
+#   --query "sort_by(Images,&CreationDate)[-1].ImageId" --output text
+ami_id = "ami-0c02fb55956c7d316"
+
+# Tu clave SSH pública
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+
+# ⚠️ Cambia esto a tu IP real para mayor seguridad:
+# curl ifconfig.me/ip  → ejemplo: "203.0.113.10/32"
+ssh_allowed_cidr = "0.0.0.0/0"
+
+# URL de conexión a tu RDS MySQL existente
+database_url = "mysql+pymysql://root:Root1234@heart-attack-db.c8b06ios85re.us-east-1.rds.amazonaws.com:3306/heart_attack_prediction"
+
+# Secret para JWT — genera uno seguro:
+# python -c "import secrets; print(secrets.token_hex(32))"
+jwt_secret_key = "cambia-esto-por-un-secret-seguro-de-64-chars"
+
+# Tu repositorio Git
+git_repo_url = "https://github.com/tu-org/heart-prediction-backend.git"
+git_branch   = "main"
