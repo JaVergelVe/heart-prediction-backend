@@ -11,21 +11,19 @@
 # O usa este recurso si conoces el SG ID de tu RDS:
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Descomenta y completa si quieres que Terraform gestione la regla de RDS:
+data "aws_security_group" "rds_sg" {
+  id = "sg-0ad4a0e9b1439a433"  # ← reemplaza con el SG ID de tu RDS
+}
 
-# data "aws_security_group" "rds_sg" {
-#   id = "sg-XXXXXXXX"  # SG ID de tu RDS existente
-# }
-#
-# resource "aws_security_group_rule" "rds_allow_ec2" {
-#   type                     = "ingress"
-#   from_port                = 3306
-#   to_port                  = 3306
-#   protocol                 = "tcp"
-#   source_security_group_id = aws_security_group.backend_sg.id
-#   security_group_id        = data.aws_security_group.rds_sg.id
-#   description              = "Allow EC2 backend to connect to RDS MySQL"
-# }
+resource "aws_security_group_rule" "rds_allow_ec2" {
+  type                     = "ingress"
+  from_port                = 3306
+  to_port                  = 3306
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.backend_sg.id
+  security_group_id        = data.aws_security_group.rds_sg.id
+  description              = "Allow EC2 backend to connect to RDS MySQL"
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ALTERNATIVA RÁPIDA (menos segura, solo para tesis):

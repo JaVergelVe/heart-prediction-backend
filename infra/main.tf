@@ -19,6 +19,24 @@ data "aws_vpc" "default" {
   default = true
 }
 
+# ─────────────────────────────────────────────
+# DATA: Amazon Linux 2023 AMI más reciente
+# ─────────────────────────────────────────────
+data "aws_ami" "al2023" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
@@ -128,6 +146,14 @@ resource "aws_iam_role_policy" "ec2_ssm_policy" {
         Effect   = "Allow"
         Action   = ["kms:Decrypt"]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = ["s3:GetObject", "s3:ListBucket"]
+        Resource = [
+          "arn:aws:s3:::heart-prediction-ml-models",
+          "arn:aws:s3:::heart-prediction-ml-models/*"
+        ]
       }
     ]
   })
@@ -160,7 +186,7 @@ resource "aws_key_pair" "deployer" {
 # EC2 t2.micro — Free Tier
 # ─────────────────────────────────────────────
 resource "aws_instance" "backend" {
-  ami                    = var.ami_id   # Amazon Linux 2023 en us-east-1
+  ami                    = data.aws_ami.al2023.id   # Amazon Linux 2023 (resuelto dinámicamente)
   instance_type          = "t2.micro"
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
@@ -171,7 +197,7 @@ resource "aws_instance" "backend" {
   associate_public_ip_address = true
 
   root_block_device {
-    volume_size = 20    # GB — Free Tier incluye 30GB EBS
+    volume_size = 30    # GB — Free Tier incluye 30GB EBS (AL2023 requiere >= 30GB)
     volume_type = "gp2"
   }
 

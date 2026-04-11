@@ -22,6 +22,10 @@ cd /opt/heart-prediction
 git clone --branch ${git_branch} ${git_repo_url} backend
 cd backend
 
+echo "=== [4b/7] Descargando modelos ML desde S3 ==="
+aws s3 cp s3://heart-prediction-ml-models/models/ app/ml/models/ --recursive --region ${aws_region}
+chmod 644 app/ml/models/*.joblib
+
 echo "=== [5/7] Obteniendo secrets desde SSM Parameter Store ==="
 AWS_REGION="${aws_region}"
 PROJECT="${project_name}"
@@ -69,4 +73,6 @@ docker run -d \
   heart-backend:latest
 
 echo "=== Deploy completado ==="
-echo "API disponible en: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):8000"
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+echo "API disponible en: http://$PUBLIC_IP:8000"
