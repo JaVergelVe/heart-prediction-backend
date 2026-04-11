@@ -34,7 +34,6 @@ variable "database_url" {
   description = "URL de conexión MySQL a RDS"
   type        = string
   sensitive   = true
-  # Ejemplo: mysql+pymysql://root:Root1234@heart-attack-db.c8b06ios85re.us-east-1.rds.amazonaws.com:3306/heart_attack_prediction
 }
 
 variable "jwt_secret_key" {
@@ -53,5 +52,5 @@ variable "git_repo_url" {
 variable "git_branch" {
   description = "Rama a desplegar"
   type        = string
-  default     = "develop"
+  default     = "main"
 }
