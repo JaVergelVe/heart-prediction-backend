@@ -18,8 +18,9 @@ chmod +x /usr/local/bin/docker-compose
 
 echo "=== [4/7] Clonando repositorio ==="
 mkdir -p /opt/heart-prediction
+chown ec2-user:ec2-user /opt/heart-prediction
 cd /opt/heart-prediction
-git clone --branch ${git_branch} ${git_repo_url} backend
+sudo -u ec2-user git clone --branch ${git_branch} ${git_repo_url} backend
 cd backend
 
 echo "=== [4b/7] Descargando modelos ML desde S3 ==="
