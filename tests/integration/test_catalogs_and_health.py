@@ -32,6 +32,18 @@ def test_catalog_unknown_field_404(client: TestClient) -> None:
     assert r.json()[msg_c.KEY_ERROR][msg_c.KEY_CODE] == msg_c.ERROR_CODE_CATALOG_FIELD_NOT_SUPPORTED
 
 
+def test_cors_preflight_allows_configured_dev_origin(client: TestClient) -> None:
+    r = client.options(
+        f"{auth_c.API_V1_PREFIX}{health_c.ROUTE_HEALTH}",
+        headers={
+            "Origin": "http://localhost:4200",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert r.status_code == http_c.HTTP_200_OK
+    assert r.headers.get("access-control-allow-origin") == "http://localhost:4200"
+
+
 def test_health_reports_database(client: TestClient) -> None:
     r = client.get(f"{auth_c.API_V1_PREFIX}{health_c.ROUTE_HEALTH}")
     assert r.status_code == http_c.HTTP_200_OK
