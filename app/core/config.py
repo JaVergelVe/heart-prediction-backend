@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     jwt_secret_key: str = auth_c.JWT_SECRET_KEY_DEV_PLACEHOLDER
     jwt_algorithm: str = auth_c.JWT_ALGORITHM_DEFAULT
     access_token_expire_seconds: int = auth_c.ACCESS_TOKEN_EXPIRE_SECONDS_DEFAULT
+    cors_origins: str = val_c.CORS_ORIGINS_DEFAULT
+
+    def cors_allowed_origins(self) -> list[str]:
+        return [part.strip() for part in self.cors_origins.split(",") if part.strip()]
 
 
 @lru_cache
