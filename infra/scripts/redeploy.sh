@@ -19,8 +19,11 @@ $SSH_CMD << 'REMOTE'
   set -euo pipefail
   cd /opt/heart-prediction/backend
 
+  echo "🔧 Configurando safe directory..."
+  sudo git config --global --add safe.directory /opt/heart-prediction/backend
+
   echo "📥 Pulling últimos cambios..."
-  git pull origin main
+  sudo git pull origin main
 
   echo "🏗️  Rebuilding imagen Docker..."
   docker build -t heart-backend:latest .
