@@ -7,6 +7,24 @@ APP_NAME_DEFAULT: Final[str] = "Heart Attack Prediction API"
 API_VERSION_DEFAULT: Final[str] = "1.0.0"
 DEBUG_DEFAULT: Final[bool] = False
 
+# --- CORS (Settings; comma-separated origins in CORS_ORIGINS env) ---
+CORS_ORIGINS_DEFAULT: Final[str] = "http://localhost:4200,http://127.0.0.1:4200"
+CORS_ALLOW_METHODS: Final[tuple[str, ...]] = (
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+)
+CORS_ALLOW_HEADERS: Final[tuple[str, ...]] = (
+    "Authorization",
+    "Content-Type",
+    "Accept",
+    "X-Requested-With",
+)
+CORS_EXPOSE_HEADERS: Final[tuple[str, ...]] = ("Content-Disposition",)
+
 # --- Register / login validation ---
 MIN_AGE_YEARS: Final[int] = 18
 MAX_AGE_YEARS: Final[int] = 120
