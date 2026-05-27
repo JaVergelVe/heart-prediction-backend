@@ -28,11 +28,11 @@ PDF_FONT_H2_LEADING: Final[int] = 15
 PDF_FONT_H2_SPACE_BEFORE: Final[int] = 10
 PDF_FONT_H2_SPACE_AFTER: Final[int] = 8
 PDF_FONT_BODY: Final[int] = 10
-PDF_FONT_BODY_LEADING: Final[int] = 13
-PDF_FONT_BODY_SPACE_AFTER: Final[int] = 6
+PDF_FONT_BODY_LEADING: Final[int] = 16
+PDF_FONT_BODY_SPACE_AFTER: Final[int] = 10
 PDF_FONT_DISCLAIMER: Final[int] = 9
-PDF_FONT_DISCLAIMER_LEADING: Final[int] = 12
-PDF_FONT_DISCLAIMER_SPACE_AFTER: Final[int] = 8
+PDF_FONT_DISCLAIMER_LEADING: Final[int] = 14
+PDF_FONT_DISCLAIMER_SPACE_AFTER: Final[int] = 10
 PDF_PARAGRAPH_STYLE_NAME_TITLE: Final[str] = "pdf_title"
 PDF_PARAGRAPH_STYLE_NAME_H2: Final[str] = "pdf_h2"
 PDF_PARAGRAPH_STYLE_NAME_BODY: Final[str] = "pdf_body"
@@ -52,7 +52,9 @@ PDF_PROBABILITY_DECIMALS: Final[int] = 2
 PDF_TITLE: Final[str] = "Informe de predicción de riesgo cardiovascular"
 PDF_SECTION_SUMMARY: Final[str] = "Resumen"
 PDF_SECTION_INPUT_DATA: Final[str] = "Datos de entrada relevantes"
-PDF_SECTION_SHAP: Final[str] = "Explicación SHAP (principal)"
+PDF_SECTION_SHAP: Final[str] = "Factores que influyeron en la estimación"
+PDF_SECTION_SHAP_MAIN: Final[str] = "Factor con mayor influencia"
+PDF_SECTION_SHAP_FACTORS: Final[str] = "Otros factores destacados"
 PDF_SECTION_RECOMMENDATIONS: Final[str] = "Recomendaciones"
 PDF_RECOMMENDATIONS_EMPTY: Final[str] = "No hay recomendaciones generadas para este resultado."
 PDF_SECTION_DISCLAIMER: Final[str] = "Aviso legal"
@@ -61,13 +63,13 @@ PDF_LABEL_PROBABILITY: Final[str] = "Probabilidad estimada"
 PDF_LABEL_RISK_LEVEL: Final[str] = "Nivel de riesgo"
 PDF_LABEL_PREDICTION_TIMESTAMP: Final[str] = "Fecha y hora de la predicción"
 
-PDF_LABEL_SHAP_FEATURE: Final[str] = "Variable con mayor impacto"
-PDF_LABEL_SHAP_IMPACT: Final[str] = "Magnitud del impacto (valor absoluto)"
-PDF_LABEL_SHAP_DIRECTION: Final[str] = "Dirección respecto al riesgo"
-PDF_LABEL_SHAP_MESSAGE: Final[str] = "Mensaje"
+PDF_LABEL_SHAP_IMPACT: Final[str] = "Impacto"
+PDF_LABEL_SHAP_MORE_DETAIL: Final[str] = "Más detalle"
 PDF_SHAP_NOT_AVAILABLE: Final[str] = (
-    "No se pudo incluir la explicación SHAP (perfil incompleto o datos insuficientes)."
+    "No se pudo incluir la explicación de factores (perfil incompleto o datos insuficientes)."
 )
+
+PDF_LINE_SHAP_FACTOR_RANK: Final[str] = "#{rank} {title}"
 
 PDF_VALUE_NOT_AVAILABLE: Final[str] = "—"
 PDF_VALUE_YES: Final[str] = "Sí"
@@ -98,6 +100,48 @@ PDF_LABEL_INPUT_PNEUMO_VAX: Final[str] = "Vacuna neumocócica (alguna vez)"
 PDF_LABEL_INPUT_TETANUS: Final[str] = "Vacuna Tdap / tétanos (últimos 10 años)"
 PDF_LABEL_INPUT_HIGH_RISK_YEAR: Final[str] = "Alto riesgo de enfermedad (último año)"
 PDF_LABEL_INPUT_COVID: Final[str] = "COVID-19 positivo (autorreporte)"
+
+PDF_SURVEY_VALUE_LABELS: Final[dict[str, dict[str, str]]] = {
+    msg_c.KEY_GENERAL_HEALTH: {
+        "Excellent": "Excelente",
+        "Very good": "Muy buena",
+        "Good": "Buena",
+        "Fair": "Regular",
+        "Poor": "Mala",
+    },
+    msg_c.KEY_LAST_CHECKUP_TIME: {
+        "Within past year (anytime less than 12 months ago)": "En el último año (menos de 12 meses)",
+        "Within past 2 years (1 year but less than 2 years ago)": "Entre 1 y 2 años",
+        "Within past 5 years (2 years but less than 5 years ago)": "Entre 2 y 5 años",
+        "5 or more years ago": "Hace 5 años o más",
+        "Never": "Nunca",
+    },
+    msg_c.KEY_SMOKER_STATUS: {
+        "Never smoked": "Nunca fumó",
+        "Former smoker": "Exfumador",
+        "Current smoker - now smokes some days": "Fumador actual: algunos días",
+        "Current smoker - now smokes every day": "Fumador actual: todos los días",
+    },
+    msg_c.KEY_ECIGARETTE_USAGE: {
+        "Never used e-cigarettes in my entire life": "Nunca ha usado cigarrillos electrónicos",
+        "Not at all (right now)": "Ahora mismo: no usa",
+        "Use them some days": "Algunos días",
+        "Use them every day": "Todos los días",
+    },
+    msg_c.KEY_TETANUS_LAST_10_TDAP: {
+        "Yes, received Tdap": "Sí, recibió Tdap",
+        "Yes, received tetanus shot but not sure what type": "Sí, vacuna antitetánica (tipo no seguro)",
+        "Yes, received tetanus shot, but not Tdap": "Sí, antitetánica pero no Tdap",
+        "No, did not receive any tetanus shot in the past 10 years": "No, ninguna en los últimos 10 años",
+    },
+    msg_c.KEY_COVID_POS: {
+        "Yes": "Sí",
+        "No": "No",
+        "Tested positive using home test without a health professional": (
+            "Positivo en autotest en casa (sin profesional)"
+        ),
+    },
+}
 
 PDF_INPUT_FIELDS: Final[tuple[tuple[str, str], ...]] = (
     (msg_c.KEY_WEIGHT_KILOGRAMS, PDF_LABEL_INPUT_WEIGHT_KG),
